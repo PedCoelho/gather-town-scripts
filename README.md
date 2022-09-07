@@ -45,9 +45,9 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 **v1 roadmap**
 
-- Include a button on the UI to hide / show the minimap - OK
+- Include a button on the UI to hide / show the minimap 
 
 **v2 roadmap**
 
-- Consider the impact and usability of displaying other players on the minimap - OK
+- Consider the impact and usability of displaying other players on the minimap 
 - Add debug function
