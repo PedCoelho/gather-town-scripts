@@ -16,15 +16,15 @@
   /*                     Reach me at pedcoelho.dev@gmail.com                    */
   /* -------------------------------------------------------------------------- */
 
-  const minimapState = new MinimapState(5);
+  const minimapState = new MinimapState();
   window.minimapState = minimapState;
 
-  function MinimapState(initialScale) {
+  function MinimapState(initialScale = 4) {
     this.MAP_COLLISION_COLOR = "rgb(32, 37, 64)";
     this.MAP_WALKABLE_COLOR = "rgb(84, 92, 143)";
     this.PLAYER_COLOR = "white";
-    this.MAP_SCALE = initialScale || 5;
     this.PLAYER_SCALING_FACTOR = 1;
+    this.MAP_SCALE = initialScale;
 
     this.initialized = false;
     this.eventSubscriptions = []; //to clean when destroying the canvas
@@ -39,6 +39,7 @@
           setupGlobalEvents();
           this.canvas = setupCanvas();
           this.toggleButton = setupMinimapButton(this.canvas);
+          setupMapControls(this.canvas);
           this.initialized = true;
           this.update();
         } else {
@@ -52,8 +53,8 @@
     this.destroy = () => {
       try {
         if (this.initialized) {
-          this.canvas.remove();
-          this.toggleButton.remove();
+          this.canvas.destroyElement();
+          this.toggleButton.destroyElement();
           this.canvas = undefined;
           this.toggleButton = undefined;
           this.eventSubscriptions.forEach((destroySubFn) => destroySubFn());
@@ -81,6 +82,7 @@
     };
 
     this.changeScale = (value) => {
+      if (this.MAP_SCALE + value <= 2 || this.MAP_SCALE + value >= 8) return;
       this.MAP_SCALE += value;
       this.update();
     };
@@ -128,37 +130,54 @@
   }
 
   function setupCanvas() {
+    const canvasCtn = document.createElement("div");
     const canvas = document.createElement("canvas");
     const canvasStyle = document.createElement("style");
 
     const minimapCss = `
-      .minimap{
-          border-radius: 4px;
+        .minimap-holder{
+          display: flex;
+          border-radius: 8px;
           position: absolute;
           top: 2rem;
           left: 2rem;
-          box-shadow: 2px 2px 2px 2px #211d1db8;
-          opacity: 0.8;
+          box-shadow: rgb(0 0 0 / 55%) 0px 10px 25px;
+          opacity: 0.9;
           transition: all .2s ease;
-          outline: 2px solid ${minimapState.MAP_COLLISION_COLOR}
+          padding: 8px;
+          background: #282d4e;
+          outline: 2px solid ${minimapState.MAP_COLLISION_COLOR};
           z-index:6;
-      }
-      .minimap.hidden{
-        opacity:0;
-        pointer-events:none;
-      }
-      .minimap:hover{
-          cursor:pointer;
-          opacity: 1;
-      }
-      `;
 
+        }
+        .minimap-holder.hidden{
+          opacity:0;
+          pointer-events:none;
+        }
+        .minimap-holder:hover{
+            opacity: 1;
+        }
+        .minimap{
+          border-radius: 6px;
+          margin-top: auto;
+          margin-bottom: auto;
+        }
+        `;
+
+    canvasCtn.classList.add("minimap-holder");
     canvas.classList.add("minimap");
 
     canvasStyle.appendChild(document.createTextNode(minimapCss));
 
     document.head.appendChild(canvasStyle);
-    document.body.appendChild(canvas);
+    canvasCtn.appendChild(canvas);
+    document.body.appendChild(canvasCtn);
+
+    canvas.destroyElement = () => {
+      canvasStyle.remove();
+      canvas.remove();
+      canvasCtn.remove();
+    };
 
     return canvas;
   }
@@ -167,8 +186,8 @@
     const parent = document.querySelector(".GameCanvasWrapper");
     const toggleButton = document.createElement("button");
     const mapIcon = `<svg width="28" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 91 91">
-      <path fill="#ffffff" d="m52.2 26.6-13.1-7V65l13.1 6.5zM36.6 19.6l-16.3 8.2c-.6.3-.9.9-.9 1.5v41c0 .6.3 1.1.8 1.4.3.2.6.3.9.3.2 0 .5-.1.7-.2L36.6 65V19.6zM71.2 19.4c-.5-.3-1.1-.3-1.6-.1l-14.9 7.4v44.8l16.7-8.1c.6-.3 1-.9.9-1.5l-.3-41c0-.7-.3-1.2-.8-1.5z"/>
-    </svg>`;
+        <path fill="#ffffff" d="m52.2 26.6-13.1-7V65l13.1 6.5zM36.6 19.6l-16.3 8.2c-.6.3-.9.9-.9 1.5v41c0 .6.3 1.1.8 1.4.3.2.6.3.9.3.2 0 .5-.1.7-.2L36.6 65V19.6zM71.2 19.4c-.5-.3-1.1-.3-1.6-.1l-14.9 7.4v44.8l16.7-8.1c.6-.3 1-.9.9-1.5l-.3-41c0-.7-.3-1.2-.8-1.5z"/>
+      </svg>`;
 
     toggleButton.innerHTML = mapIcon;
 
@@ -177,23 +196,23 @@
     const hasSiblings = parent.childElementCount > 2;
 
     const buttonCss = `
-      .minimap-toggle{
-        display: flex;
-        position: absolute;
-        left: 20px;
-        bottom: ${!hasSiblings ? "20px" : "88px"};
-        width: 48px;
-        height: 48px;
-        border:0;
-        border-radius: 24px;
-        background-color: rgb(40, 45, 78);
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        box-shadow: rgb(0 0 0 / 55%) 0px 10px 25px;
-        z-index:6;
-      }
-      `;
+        .minimap-toggle{
+          display: flex;
+          position: absolute;
+          left: 20px;
+          bottom: ${!hasSiblings ? "20px" : "88px"};
+          width: 48px;
+          height: 48px;
+          border:0;
+          border-radius: 24px;
+          background-color: rgb(40, 45, 78);
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+          box-shadow: rgb(0 0 0 / 55%) 0px 10px 25px;
+          z-index:6;
+        }
+        `;
 
     toggleButton.classList.add("minimap-toggle");
 
@@ -203,10 +222,107 @@
     document.head.appendChild(buttonStyle);
 
     toggleButton.addEventListener("click", () =>
-      canvasElement.classList.toggle("hidden")
+      canvasElement.parentElement.classList.toggle("hidden")
     );
 
+    toggleButton.destroyElement = () => {
+      buttonStyle.remove();
+      toggleButton.remove();
+    };
+
     return toggleButton;
+  }
+
+  function setupMapControls(canvasElement) {
+    //todo  add top control (teleport,draw names toggle?)
+    const controlsCtn = document.createElement("div");
+    const controlsStyle = document.createElement("style");
+
+    const controlsHTML = `
+    <div>
+      <button>A</button>
+    </div>
+    <div id="scaleControls">
+      <button>+</button>
+      <span></span>
+      <button>-</button>
+    </div>
+    `;
+
+    controlsCtn.innerHTML = controlsHTML;
+
+    const controlsCss = `
+        .controls-ctn{
+          display: flex;
+          flex-flow: column;
+          justify-content:space-between;
+          margin-left: 8px;
+        }
+
+        .controls-ctn div:first-child{
+          margin-bottom:8px
+        }
+
+        .controls-ctn > div{
+          display: flex;
+          flex-flow: column;
+          border: 1px solid grey;
+          border-radius: 6px;
+          background: #141627;
+          padding: 4px;
+        }
+
+        .controls-ctn button {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+          width: 22px;
+          height: 22px;
+          font-size: 25px;
+          color: white;
+          border: unset;
+          line-height: 25px;
+          background-color: unset;
+          transition:background .2s ease;
+        }
+
+        .controls-ctn button:hover{
+          background:#393d46ad;
+        }
+        .controls-ctn button:active{
+          background:#282d4e;
+        }
+
+        .controls-ctn #scaleControls span {
+          align-self: center;
+          height: 0.5px;
+          width: 90%;
+          margin: 4px 0;
+          background: grey;
+      }
+      `;
+
+    controlsCtn.classList.add("controls-ctn");
+    controlsStyle.appendChild(document.createTextNode(controlsCss));
+
+    canvasElement.parentElement.appendChild(controlsCtn);
+    document.head.appendChild(controlsStyle);
+
+    const originalCanvasDestroy = canvasElement.destroyElement;
+    canvasElement.destroyElement = () => {
+      controlsStyle.remove();
+      controlsCtn.remove();
+      originalCanvasDestroy();
+    };
+
+    const scaleUpBtn =
+      controlsCtn.querySelector("#scaleControls").firstElementChild;
+    const scaleDownBtn =
+      controlsCtn.querySelector("#scaleControls").lastElementChild;
+
+    scaleUpBtn.addEventListener("click", () => minimapState.changeScale(1));
+    scaleDownBtn.addEventListener("click", () => minimapState.changeScale(-1));
   }
 
   function drawMap(ratio, canvas) {
@@ -224,6 +340,8 @@
 
     canvas.height = y * ratio;
     canvas.width = x * ratio;
+    canvas.style.height = y * ratio;
+    canvas.style.width = x * ratio;
 
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
