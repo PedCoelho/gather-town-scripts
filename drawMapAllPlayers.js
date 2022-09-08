@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      1.0
 // @description  try to take over the world!
-// @author       Pedro Coelho (github.com/pedcoelho)
+// @author       Pedro Coelho (https://github.com/pedcoelho)
 // @match        https://app.gather.town/app/*
 // @icon         https://www.google.com/s2/favicons?domain=gather.town
 // @grant        none
@@ -24,6 +24,7 @@
     this.MAP_WALKABLE_COLOR = "rgb(84, 92, 143)";
     this.PLAYER_COLOR = "white";
     this.PLAYER_SCALING_FACTOR = 1;
+    this.INITIAL_SCALE = initialScale;
     this.MAP_SCALE = initialScale;
 
     this.initialized = false;
@@ -143,7 +144,7 @@
           left: 2rem;
           box-shadow: rgb(0 0 0 / 55%) 0px 10px 25px;
           opacity: 0.9;
-          transition: all .2s ease;
+          transition: opacity .2s ease;
           padding: 8px;
           background: #282d4e;
           outline: 2px solid ${minimapState.MAP_COLLISION_COLOR};
@@ -178,6 +179,46 @@
       canvas.remove();
       canvasCtn.remove();
     };
+
+    /* ------------------------- minimap dragging setup ------------------------- */
+    canvasCtn.addEventListener("mousedown", (evt) => {
+      evt.preventDefault();
+
+      document.body.style.overflow = "hidden";
+
+      let startX = 0;
+      let startY = 0;
+      let newX = 0;
+      let newY = 0;
+
+      // get the starting position of the cursor
+      startX = evt.clientX;
+      startY = evt.clientY;
+
+      const mouseEvent = (e) => {
+        // calculate the new position
+        newX = startX - e.clientX;
+        newY = startY - e.clientY;
+
+        // with each move we also want to update the start X and Y
+        startX = e.clientX;
+        startY = e.clientY;
+
+        // set the element's new position:
+        canvasCtn.style.left = canvasCtn.offsetLeft - newX + "px";
+        canvasCtn.style.top = canvasCtn.offsetTop - newY + "px";
+      };
+
+      document.addEventListener("mousemove", mouseEvent);
+
+      const mouseUpHandler = () => {
+        document.body.style.overflow = "";
+        document.removeEventListener("mousemove", mouseEvent);
+        document.removeEventListener("mouseup", mouseUpHandler);
+      };
+
+      document.addEventListener("mouseup", mouseUpHandler);
+    });
 
     return canvas;
   }
@@ -234,13 +275,16 @@
   }
 
   function setupMapControls(canvasElement) {
-    //todo  add top control (teleport,draw names toggle?)
     const controlsCtn = document.createElement("div");
     const controlsStyle = document.createElement("style");
 
+    const refreshIcon = `<svg style="margin-left:1px" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" baseProfile="tiny" viewBox="0 0 500 500">
+    <path fill="#ffffff" d="M421.596 294.643q0 1.395-.279 1.953-17.857 74.777-74.777 121.233t-133.371 46.457q-40.737 0-78.823-15.346t-67.941-43.806l-35.993 35.993q-5.301 5.301-12.556 5.301T5.3 441.127t-5.301-12.556v-125q0-7.254 5.301-12.556t12.556-5.301h125q7.254 0 12.556 5.301t5.301 12.556-5.301 12.556l-38.226 38.226q19.81 18.415 44.922 28.46t52.176 10.044q37.388 0 69.754-18.136t51.897-49.944q3.069-4.743 14.788-32.645 2.232-6.417 8.371-6.417h53.571q3.627 0 6.278 2.651t2.651 6.278zm6.975-223.214v125q0 7.254-5.301 12.556t-12.556 5.301h-125q-7.254 0-12.556-5.301t-5.301-12.556 5.301-12.556l38.504-38.504q-41.294-38.226-97.377-38.226-37.388 0-69.754 18.136t-51.897 49.944q-3.069 4.743-14.788 32.645-2.232 6.417-8.371 6.417H13.951q-3.627 0-6.278-2.651t-2.651-6.278v-1.953Q23.158 128.626 80.357 82.17t133.929-46.457q40.737 0 79.241 15.485t68.359 43.667l36.272-35.993q5.301-5.301 12.556-5.301t12.556 5.301 5.301 12.556z"/>
+  </svg>`;
+
     const controlsHTML = `
-    <div>
-      <button>A</button>
+    <div id="resetControl">
+      <button>${refreshIcon}</button>
     </div>
     <div id="scaleControls">
       <button>+</button>
@@ -257,6 +301,7 @@
           flex-flow: column;
           justify-content:space-between;
           margin-left: 8px;
+          color:white;
         }
 
         .controls-ctn div:first-child{
@@ -274,6 +319,7 @@
 
         .controls-ctn button {
           display: flex;
+          padding: 2px;
           justify-content: center;
           align-items: center;
           cursor: pointer;
@@ -320,9 +366,16 @@
       controlsCtn.querySelector("#scaleControls").firstElementChild;
     const scaleDownBtn =
       controlsCtn.querySelector("#scaleControls").lastElementChild;
+    const resetBtn = controlsCtn.querySelector("#resetControl");
 
     scaleUpBtn.addEventListener("click", () => minimapState.changeScale(1));
     scaleDownBtn.addEventListener("click", () => minimapState.changeScale(-1));
+    resetBtn.addEventListener("click", () => {
+      minimapState.MAP_SCALE = minimapState.INITIAL_SCALE;
+      minimapState.canvas.parentElement.style.top = "2rem";
+      minimapState.canvas.parentElement.style.left = "2rem";
+      minimapState.update();
+    });
   }
 
   function drawMap(ratio, canvas) {

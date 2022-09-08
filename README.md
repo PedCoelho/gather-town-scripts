@@ -3,16 +3,12 @@
 Experimenting with a **gather.town** frontend client scripting to implement things like:
 
 1. An interactive minimap (WIP)
-2. A script that moves the player automatically in a set or random pattern of directions
+2. A script that moves the player automatically in a set pattern of directions (or a random pattern)
 3. A script that logs data about player interactions with objects in a given space
 
 <br>
 
 # minimap roadmap
-
-**v1 roadmap**
-
-- Possibly include a zoom feature to allow for the minimap to be scaled up or down in real-time (could be achieved by buttons)
 
 **v2 roadmap**
 
@@ -45,9 +41,11 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 **v1 roadmap**
 
-- Include a button on the UI to hide / show the minimap 
+- Include a button on the UI to hide / show the minimap
+- Possibly include a zoom feature to allow for the minimap to be scaled up or down in real-time (could be achieved by buttons)
+- Allow dragging the minimap to reposition it (and a button to reset the minimap's position and scale)
 
 **v2 roadmap**
 
-- Consider the impact and usability of displaying other players on the minimap 
+- Consider the impact and usability of displaying other players on the minimap
 - Add debug function
