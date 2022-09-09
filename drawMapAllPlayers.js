@@ -4,7 +4,7 @@
 // @version      1.0
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
-// @match        https://app.gather.town/app/*
+// @match        https://app.gather.town/app*
 // @icon         https://www.google.com/s2/favicons?domain=gather.town
 // @grant        none
 // ==/UserScript==
