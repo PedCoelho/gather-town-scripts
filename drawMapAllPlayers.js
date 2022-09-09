@@ -106,7 +106,7 @@
         return clearInterval(detectGame);
       }
       if (window?.game) {
-        const subscriptions = [monitorPlayerMovement];
+        const subscriptions = [monitorPlayerMovement,monitorPlayersExiting];
 
         subscriptions.forEach((eventSubscriptionFn) => {
           minimapState.eventSubscriptions.push(eventSubscriptionFn());
@@ -128,6 +128,18 @@
           minimapState.update();
         }
       });
+
+    const monitorPlayersExiting = () =>
+      game.subscribeToEvent("playerExits",(evt, { player: { map } }) => {
+       if(!minimapState.initialized) return;
+
+       //update map when any player exits in the current map
+       const currentMap = gameSpace.mapId;
+       if (map === currentMap) {
+          minimapState.update();
+       }
+
+      })
   }
 
   function setupCanvas() {
