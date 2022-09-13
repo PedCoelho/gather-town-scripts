@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      1.01
+// @version      1.02
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
 // @match        https://app.gather.town/app*
@@ -50,14 +50,16 @@
                 }
             } catch (e) {
                 console.error(e)
+            } finally {
+                this.initialized = true
             }
         }
 
         this.destroy = () => {
             try {
                 if (this.initialized) {
-                    this.canvas.destroyElement()
-                    this.toggleButton.destroyElement()
+                    this.canvas?.destroyElement()
+                    this.toggleButton?.destroyElement()
                     this.canvas = undefined
                     this.toggleButton = undefined
                     this.eventSubscriptions.forEach((destroySubFn) =>
@@ -243,54 +245,61 @@
     }
 
     function setupMinimapButton(canvasElement) {
-        const parent = document.querySelector('.GameCanvasWrapper')
-        const toggleButton = document.createElement('button')
-        const mapIcon = `<svg width="28" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 91 91">
-        <path fill="#ffffff" d="m52.2 26.6-13.1-7V65l13.1 6.5zM36.6 19.6l-16.3 8.2c-.6.3-.9.9-.9 1.5v41c0 .6.3 1.1.8 1.4.3.2.6.3.9.3.2 0 .5-.1.7-.2L36.6 65V19.6zM71.2 19.4c-.5-.3-1.1-.3-1.6-.1l-14.9 7.4v44.8l16.7-8.1c.6-.3 1-.9.9-1.5l-.3-41c0-.7-.3-1.2-.8-1.5z"/>
-      </svg>`
+        try {
+            const parent = document.querySelector('.GameCanvasWrapper')
+            const toggleButton = document.createElement('button')
+            const mapIcon = `<svg width="28" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 91 91">
+            <path fill="#ffffff" d="m52.2 26.6-13.1-7V65l13.1 6.5zM36.6 19.6l-16.3 8.2c-.6.3-.9.9-.9 1.5v41c0 .6.3 1.1.8 1.4.3.2.6.3.9.3.2 0 .5-.1.7-.2L36.6 65V19.6zM71.2 19.4c-.5-.3-1.1-.3-1.6-.1l-14.9 7.4v44.8l16.7-8.1c.6-.3 1-.9.9-1.5l-.3-41c0-.7-.3-1.2-.8-1.5z"/>
+          </svg>`
 
-        toggleButton.innerHTML = mapIcon
+            toggleButton.innerHTML = mapIcon
 
-        const buttonStyle = document.createElement('style')
+            const buttonStyle = document.createElement('style')
 
-        const hasSiblings = parent.childElementCount > 2
+            const hasSiblings = parent.childElementCount > 2
 
-        const buttonCss = `
-        .minimap-toggle{
-          display: flex;
-          position: absolute;
-          left: 20px;
-          bottom: ${!hasSiblings ? '20px' : '88px'};
-          width: 48px;
-          height: 48px;
-          border:0;
-          border-radius: 24px;
-          background-color: rgb(40, 45, 78);
-          justify-content: center;
-          align-items: center;
-          cursor: pointer;
-          box-shadow: rgb(0 0 0 / 55%) 0px 10px 25px;
-          z-index:6;
+            const buttonCss = `
+            .minimap-toggle{
+              display: flex;
+              position: absolute;
+              left: 20px;
+              bottom: ${!hasSiblings ? '20px' : '88px'};
+              width: 48px;
+              height: 48px;
+              border:0;
+              border-radius: 24px;
+              background-color: rgb(40, 45, 78);
+              justify-content: center;
+              align-items: center;
+              cursor: pointer;
+              box-shadow: rgb(0 0 0 / 55%) 0px 10px 25px;
+              z-index:6;
+            }
+            `
+
+            toggleButton.classList.add('minimap-toggle')
+
+            buttonStyle.appendChild(document.createTextNode(buttonCss))
+
+            parent.appendChild(toggleButton)
+            document.head.appendChild(buttonStyle)
+
+            toggleButton.addEventListener('click', () =>
+                canvasElement.parentElement.classList.toggle('hidden')
+            )
+
+            toggleButton.destroyElement = () => {
+                buttonStyle.remove()
+                toggleButton.remove()
+            }
+
+            return toggleButton
+        } catch (e) {
+            console.error(
+                'MINIMAP EXTENSION: Failed to initialize minimap toggle button'
+            )
+            return undefined
         }
-        `
-
-        toggleButton.classList.add('minimap-toggle')
-
-        buttonStyle.appendChild(document.createTextNode(buttonCss))
-
-        parent.appendChild(toggleButton)
-        document.head.appendChild(buttonStyle)
-
-        toggleButton.addEventListener('click', () =>
-            canvasElement.parentElement.classList.toggle('hidden')
-        )
-
-        toggleButton.destroyElement = () => {
-            buttonStyle.remove()
-            toggleButton.remove()
-        }
-
-        return toggleButton
     }
 
     function setupMapControls(canvasElement) {
