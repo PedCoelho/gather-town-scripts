@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.01
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
 // @match        https://app.gather.town/app*
@@ -106,7 +106,7 @@
         return clearInterval(detectGame);
       }
       if (window?.game) {
-        const subscriptions = [monitorPlayerMovement,monitorPlayersExiting];
+        const subscriptions = [monitorPlayerMovement, monitorPlayersExiting];
 
         subscriptions.forEach((eventSubscriptionFn) => {
           minimapState.eventSubscriptions.push(eventSubscriptionFn());
@@ -130,16 +130,15 @@
       });
 
     const monitorPlayersExiting = () =>
-      game.subscribeToEvent("playerExits",(evt, { player: { map } }) => {
-       if(!minimapState.initialized) return;
+      game.subscribeToEvent("playerExits", (evt, { player: { map } }) => {
+        if (!minimapState.initialized) return;
 
-       //update map when any player exits in the current map
-       const currentMap = gameSpace.mapId;
-       if (map === currentMap) {
+        //update map when any player exits in the current map
+        const currentMap = gameSpace.mapId;
+        if (map === currentMap) {
           minimapState.update();
-       }
-
-      })
+        }
+      });
   }
 
   function setupCanvas() {
@@ -411,14 +410,14 @@
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    collisions.forEach((line, y) => {
-      line.forEach((col, x) => {
-        ctx.fillStyle = col
+    for (let line = 0; line <= y; line++) {
+      for (let col = 0; col <= x; col++) {
+        ctx.fillStyle = collisions?.[line]?.[col]
           ? minimapState.MAP_COLLISION_COLOR
           : minimapState.MAP_WALKABLE_COLOR;
-        ctx.fillRect(x * ratio, y * ratio, ratio, ratio);
-      });
-    });
+        ctx.fillRect(col * ratio, line * ratio, ratio, ratio);
+      }
+    }
 
     /* ---------------------------- draw ALL players ---------------------------- */
     playersInMap.forEach(({ x, y }) => {
