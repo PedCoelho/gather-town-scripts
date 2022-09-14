@@ -13,13 +13,7 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 **v2 roadmap**
 
 -   Possibly add some kind of interaction
-    -   Teleport directly to the coordinate clicked (easier)
-
-```
-        * this could be done by checking the name of the player which is on a given x,y coordinate at runtime
-        * it can also be done by storing the players name directly, although I dont think thats viable on canvas object
-        * instead of drawing on canvas directly, it could be shown below the canvas
-```
+  
 
 -   Possibly have a mode that renders all maps in a given space simultaneously
 -   Maybe consider highlighting certain important types / kinds of objects (ex: portals, interactive objects)
@@ -49,3 +43,4 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 -   Consider the impact and usability of displaying other players on the minimap
 -   Add debug function
+-   Teleport directly to the coordinate clicked (easier)
