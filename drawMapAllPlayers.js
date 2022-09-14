@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      1.02
+// @version      1.03
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
-// @match        https://app.gather.town/app*
+// @match        https://*.gather.town/app*
 // @icon         https://www.google.com/s2/favicons?domain=gather.town
 // @grant        none
 // ==/UserScript==
@@ -89,7 +89,7 @@
         }
 
         this.changeScale = (value) => {
-            if (this.MAP_SCALE + value <= 2 || this.MAP_SCALE + value >= 8)
+            if (this.MAP_SCALE + value < 1 || this.MAP_SCALE + value >= 8)
                 return
             this.MAP_SCALE += value
             this.update()
@@ -189,7 +189,7 @@
             position: absolute;
             display:none;
             pointer-events:none;
-            padding: 10px 20px;
+            padding: 2px 8px;
             border: 1px solid #b3c9ce;
             border-radius: 4px;
             text-align: center;
@@ -229,6 +229,9 @@
         canvas.addEventListener('mousemove', (evt) =>
             getPlayerNameOnHover(evt, tooltip)
         )
+        canvas.addEventListener('mouseleave', () => {
+            tooltip.style = ''
+        })
 
         return canvas
     }
@@ -491,29 +494,35 @@
     }
 
     function getPlayerNameOnHover(evt, tooltip) {
-        //todo adjust radius of player hover check
         const x = Math.floor(evt.offsetX / minimapState.MAP_SCALE)
         const y = Math.floor(evt.offsetY / minimapState.MAP_SCALE)
 
         const playersInMap = Object.values(
             game.getPlayersInMap(gameSpace.mapId)
         )
+        const playerInCoordinate = (playerCoor, cursorCoor) => {
+            return (
+                Math.abs((playerCoor - cursorCoor) * minimapState.MAP_SCALE) <=
+                minimapState.MAP_SCALE
+            )
+        }
 
         const hoveredPlayer = playersInMap.find(
-            (player) => player.x === x && player.y === y
+            (player) =>
+                playerInCoordinate(player.x, x) &&
+                playerInCoordinate(player.y, y)
         )
 
-        if (!hoveredPlayer) {
-            tooltip.style.display = 'none'
-            tooltip.style.left = 'unset'
-            tooltip.style.top = 'unset'
-            return
-        } else {
+        if (hoveredPlayer) {
             tooltip.innerHTML = hoveredPlayer.name
-            tooltip.style.left = evt.clientX + 'px'
-            tooltip.style.top = evt.clientY + 'px'
+            evt.target.style.cursor = 'pointer'
             tooltip.style.display = 'block'
+            tooltip.style.top = evt.clientY + 10 + 'px'
+            tooltip.style.left = evt.clientX + 'px'
+            return
         }
+        evt.target.style.cursor = 'unset'
+        tooltip.style = ''
     }
 
     function dragMinimap(evt, canvasCtn) {
