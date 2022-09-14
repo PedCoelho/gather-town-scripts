@@ -12,9 +12,7 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 **v2 roadmap**
 
--   Possibly add some kind of interaction
-  
-
+-   Add some kinds of interaction (teleport, player names on hover, etc)
 -   Possibly have a mode that renders all maps in a given space simultaneously
 -   Maybe consider highlighting certain important types / kinds of objects (ex: portals, interactive objects)
     -   could be a toggle that triggers a boolean that gets checked on render function, or wrapper
@@ -22,7 +20,7 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 ### ⏳ UNDER DEVELOPMENT
 
--   Maybe view players names on mouseover
+-   View players names on mouseover
 -   Handle whether the player has already entered the game or not, in order to get it running on page startup without any problems
 
 ```
@@ -44,3 +42,7 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 -   Consider the impact and usability of displaying other players on the minimap
 -   Add debug function
 -   Teleport directly to the coordinate clicked (easier)
+
+### ⏳ KNOWN BUGS
+
+-   At the moment, when a player enters a portal, map.update doesn`t get triggered. This probably has to do with the fact that we are only triggering map renders when somebody moves in the current map.
