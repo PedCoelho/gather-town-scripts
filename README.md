@@ -12,15 +12,14 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 **v2 roadmap**
 
--   Add some kinds of interaction (teleport, player names on hover, etc)
 -   Possibly have a mode that renders all maps in a given space simultaneously
+    -   Or allows you to select a given map or a list of maps to render
 -   Maybe consider highlighting certain important types / kinds of objects (ex: portals, interactive objects)
     -   could be a toggle that triggers a boolean that gets checked on render function, or wrapper
     -   render function could be broken into steps, for better legibility, and wrapped by a wrapper (render players, render map, render objects, etc)
 
 ### ⏳ UNDER DEVELOPMENT
 
--   View players names on mouseover
 -   Handle whether the player has already entered the game or not, in order to get it running on page startup without any problems
 
 ```
@@ -41,7 +40,8 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 -   Consider the impact and usability of displaying other players on the minimap
 -   Add debug function
--   Teleport directly to the coordinate clicked (easier)
+-   Teleport directly to the coordinate clicked
+-   View players names on mouseover
 
 ### ⏳ KNOWN BUGS
 
