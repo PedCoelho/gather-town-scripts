@@ -490,7 +490,6 @@
         )
     }
 
-
     function getPlayerNameOnHover(evt, tooltip) {
         //todo adjust radius of player hover check
         const x = Math.floor(evt.offsetX / minimapState.MAP_SCALE)
@@ -515,6 +514,7 @@
             tooltip.style.top = evt.clientY + 'px'
             tooltip.style.display = 'block'
         }
+    }
 
     function dragMinimap(evt, canvasCtn) {
         evt.preventDefault()
