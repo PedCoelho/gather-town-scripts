@@ -12,9 +12,8 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 **v2 roadmap**
 
-- Possibly add some kind of interaction
-  - Teleport directly to the coordinate clicked (easier)
-- Maybe view players names on mouseover
+-   Possibly add some kind of interaction
+    -   Teleport directly to the coordinate clicked (easier)
 
 ```
         * this could be done by checking the name of the player which is on a given x,y coordinate at runtime
@@ -22,14 +21,15 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
         * instead of drawing on canvas directly, it could be shown below the canvas
 ```
 
-- Possibly have a mode that renders all maps in a given space simultaneously
-- Maybe consider highlighting certain important types / kinds of objects (ex: portals, interactive objects)
-  - could be a toggle that triggers a boolean that gets checked on render function, or wrapper
-  - render function could be broken into steps, for better legibility, and wrapped by a wrapper (render players, render map, render objects, etc)
+-   Possibly have a mode that renders all maps in a given space simultaneously
+-   Maybe consider highlighting certain important types / kinds of objects (ex: portals, interactive objects)
+    -   could be a toggle that triggers a boolean that gets checked on render function, or wrapper
+    -   render function could be broken into steps, for better legibility, and wrapped by a wrapper (render players, render map, render objects, etc)
 
 ### ⏳ UNDER DEVELOPMENT
 
-- Handle whether the player has already entered the game or not, in order to get it running on page startup without any problems
+-   Maybe view players names on mouseover
+-   Handle whether the player has already entered the game or not, in order to get it running on page startup without any problems
 
 ```
        * this includes toggling visibility / deleting the canvas if the player leaves the game
@@ -41,11 +41,11 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 **v1 roadmap**
 
-- Include a button on the UI to hide / show the minimap
-- Possibly include a zoom feature to allow for the minimap to be scaled up or down in real-time (could be achieved by buttons)
-- Allow dragging the minimap to reposition it (and a button to reset the minimap's position and scale)
+-   Include a button on the UI to hide / show the minimap
+-   Possibly include a zoom feature to allow for the minimap to be scaled up or down in real-time (could be achieved by buttons)
+-   Allow dragging the minimap to reposition it (and a button to reset the minimap's position and scale)
 
 **v2 roadmap**
 
-- Consider the impact and usability of displaying other players on the minimap
-- Add debug function
+-   Consider the impact and usability of displaying other players on the minimap
+-   Add debug function
