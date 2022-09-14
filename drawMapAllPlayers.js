@@ -219,44 +219,11 @@
         }
 
         /* ------------------------- minimap dragging setup ------------------------- */
-        canvasCtn.addEventListener('mousedown', (evt) => {
-            evt.preventDefault()
-
-            document.body.style.overflow = 'hidden'
-
-            let startX = 0
-            let startY = 0
-            let newX = 0
-            let newY = 0
-
-            // get the starting position of the cursor
-            startX = evt.clientX
-            startY = evt.clientY
-
-            const mouseEvent = (e) => {
-                // calculate the new position
-                newX = startX - e.clientX
-                newY = startY - e.clientY
-
-                // with each move we also want to update the start X and Y
-                startX = e.clientX
-                startY = e.clientY
-
-                // set the element's new position:
-                canvasCtn.style.left = canvasCtn.offsetLeft - newX + 'px'
-                canvasCtn.style.top = canvasCtn.offsetTop - newY + 'px'
-            }
-
-            document.addEventListener('mousemove', mouseEvent)
-
-            const mouseUpHandler = () => {
-                document.body.style.overflow = ''
-                document.removeEventListener('mousemove', mouseEvent)
-                document.removeEventListener('mouseup', mouseUpHandler)
-            }
-
-            document.addEventListener('mouseup', mouseUpHandler)
-        })
+        canvasCtn.addEventListener('mousedown', (evt) =>
+            dragMinimap(evt, canvasCtn)
+        )
+        /* ------------------------- teleport on double click setup ------------------------ */
+        canvas.addEventListener('click', teleportOnClick)
 
         /* ------------------------- show player names setup ------------------------ */
         canvas.addEventListener('mousemove', (evt) =>
@@ -481,9 +448,11 @@
         )
 
         if (minimapState.debug) {
-            collisions.forEach((line, y) => {
-                line.forEach((col, x) => drawCoords(ctx, { x, y }, ratio))
-            })
+            for (let line = 0; line <= y; line++) {
+                for (let col = 0; col <= x; col++) {
+                    drawCoords(ctx, { x: col, y: line }, ratio)
+                }
+            }
         }
     }
 
@@ -521,6 +490,7 @@
         )
     }
 
+
     function getPlayerNameOnHover(evt, tooltip) {
         //todo adjust radius of player hover check
         const x = Math.floor(evt.offsetX / minimapState.MAP_SCALE)
@@ -545,6 +515,63 @@
             tooltip.style.top = evt.clientY + 'px'
             tooltip.style.display = 'block'
         }
+
+    function dragMinimap(evt, canvasCtn) {
+        evt.preventDefault()
+        evt.stopPropagation()
+        document.body.style.overflow = 'hidden'
+
+        let startX = 0
+        let startY = 0
+        let newX = 0
+        let newY = 0
+
+        // get the starting position of the cursor
+        startX = evt.clientX
+        startY = evt.clientY
+
+        const mouseEvent = (e) => {
+            // calculate the new position
+            newX = startX - e.clientX
+            newY = startY - e.clientY
+
+            // with each move we also want to update the start X and Y
+            startX = e.clientX
+            startY = e.clientY
+
+            // set the element's new position:
+            canvasCtn.style.left = canvasCtn.offsetLeft - newX + 'px'
+            canvasCtn.style.top = canvasCtn.offsetTop - newY + 'px'
+        }
+
+        document.addEventListener('mousemove', mouseEvent)
+
+        const mouseUpHandler = () => {
+            document.body.style.overflow = ''
+            document.removeEventListener('mousemove', mouseEvent)
+            document.removeEventListener('mouseup', mouseUpHandler)
+        }
+
+        document.addEventListener('mouseup', mouseUpHandler)
+    }
+
+    function teleportOnClick(evt) {
+        const canvas = evt.target
+
+        const teleport = ({ offsetX, offsetY }) => {
+            const x = Math.floor(offsetX / minimapState.MAP_SCALE)
+            const y = Math.floor(offsetY / minimapState.MAP_SCALE)
+
+            game.teleport(gameSpace.mapId, x, y)
+            canvas.removeEventListener('click', teleport)
+        }
+        /* -------------------------------------------------------------------------- */
+        /*                      add eventListener for DoubleClick                     */
+        /* -------------------------------------------------------------------------- */
+        canvas.addEventListener('click', teleport)
+        setTimeout(() => {
+            canvas.removeEventListener('click', teleport)
+        }, 300)
     }
 
     //todo consider adding this to a web worker (can it be on the same file / code?)
