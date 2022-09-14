@@ -154,6 +154,8 @@
     function setupCanvas() {
         const canvasCtn = document.createElement('div')
         const canvas = document.createElement('canvas')
+        const tooltip = document.createElement('div')
+        tooltip.className = 'tooltip'
         const canvasStyle = document.createElement('style')
 
         const minimapCss = `
@@ -170,7 +172,6 @@
           background: #282d4e;
           outline: 2px solid ${minimapState.MAP_COLLISION_COLOR};
           z-index:6;
-
         }
         .minimap-holder.hidden{
           opacity:0;
@@ -184,6 +185,20 @@
           margin-top: auto;
           margin-bottom: auto;
         }
+        .tooltip {
+            position: absolute;
+            display:none;
+            pointer-events:none;
+            padding: 10px 20px;
+            border: 1px solid #b3c9ce;
+            border-radius: 4px;
+            text-align: center;
+            font: italic 14px/1.3 sans-serif;
+            color: #333;
+            background: #fff;
+            z-index: 100000;
+            box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+          }
         `
 
         canvasCtn.classList.add('minimap-holder')
@@ -194,11 +209,13 @@
         document.head.appendChild(canvasStyle)
         canvasCtn.appendChild(canvas)
         document.body.appendChild(canvasCtn)
+        document.body.appendChild(tooltip)
 
         canvas.destroyElement = () => {
             canvasStyle.remove()
             canvas.remove()
             canvasCtn.remove()
+            tooltip.remove()
         }
 
         /* ------------------------- minimap dragging setup ------------------------- */
@@ -240,6 +257,11 @@
 
             document.addEventListener('mouseup', mouseUpHandler)
         })
+
+        /* ------------------------- show player names setup ------------------------ */
+        canvas.addEventListener('mousemove', (evt) =>
+            getPlayerNameOnHover(evt, tooltip)
+        )
 
         return canvas
     }
@@ -497,6 +519,32 @@
             position.x * ratio + ratio / 2,
             position.y * ratio + ratio * 0.9
         )
+    }
+
+    function getPlayerNameOnHover(evt, tooltip) {
+        //todo adjust radius of player hover check
+        const x = Math.floor(evt.offsetX / minimapState.MAP_SCALE)
+        const y = Math.floor(evt.offsetY / minimapState.MAP_SCALE)
+
+        const playersInMap = Object.values(
+            game.getPlayersInMap(gameSpace.mapId)
+        )
+
+        const hoveredPlayer = playersInMap.find(
+            (player) => player.x === x && player.y === y
+        )
+
+        if (!hoveredPlayer) {
+            tooltip.style.display = 'none'
+            tooltip.style.left = 'unset'
+            tooltip.style.top = 'unset'
+            return
+        } else {
+            tooltip.innerHTML = hoveredPlayer.name
+            tooltip.style.left = evt.clientX + 'px'
+            tooltip.style.top = evt.clientY + 'px'
+            tooltip.style.display = 'block'
+        }
     }
 
     //todo consider adding this to a web worker (can it be on the same file / code?)
