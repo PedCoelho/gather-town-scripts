@@ -39,8 +39,8 @@
         return findPlayerId(playerUIButton)
     }
 
-    const addButton = (parentEl, icon, text = 'new button', callbackFn) => { const buttonRef = [...parentEl.querySelectorAll('span')].find((span) => span.innerText === 'Follow').parentElement
-    
+    const addButton = (parentEl, icon, text = 'new button', callbackFn) => {
+        const buttonRef = [...parentEl.querySelectorAll('span')].find((span) => span.innerText === 'Follow')?.parentElement
         if (!buttonRef) return
 
         const selectedPlayerId = findSelectedPlayer()
@@ -55,6 +55,7 @@
             callbackFn(selectedPlayerId)
         }
         parentEl.appendChild(newElement)
+        console.log(`✨${text} button initialized`)
     }
 
     // The teleport magic
@@ -82,7 +83,6 @@
             teleportToPlayer
         )
         addButton(parentEl, teleportIcon, 'Teleport to me', teleportToMe)
-        console.log('buttons initialized')
     }
 
     const isUIOpen = () => {
