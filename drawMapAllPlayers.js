@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      1.02
+// @version      1.03
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
-// @match        https://app.gather.town/app*
+// @match        https://*.gather.town/app*
 // @icon         https://www.google.com/s2/favicons?domain=gather.town
 // @grant        none
 // ==/UserScript==
@@ -89,7 +89,7 @@
         }
 
         this.changeScale = (value) => {
-            if (this.MAP_SCALE + value <= 2 || this.MAP_SCALE + value >= 8)
+            if (this.MAP_SCALE + value < 1 || this.MAP_SCALE + value >= 8)
                 return
             this.MAP_SCALE += value
             this.update()
@@ -154,6 +154,8 @@
     function setupCanvas() {
         const canvasCtn = document.createElement('div')
         const canvas = document.createElement('canvas')
+        const tooltip = document.createElement('div')
+        tooltip.className = 'tooltip'
         const canvasStyle = document.createElement('style')
 
         const minimapCss = `
@@ -170,7 +172,6 @@
           background: #282d4e;
           outline: 2px solid ${minimapState.MAP_COLLISION_COLOR};
           z-index:6;
-
         }
         .minimap-holder.hidden{
           opacity:0;
@@ -184,6 +185,20 @@
           margin-top: auto;
           margin-bottom: auto;
         }
+        .tooltip {
+            position: absolute;
+            display:none;
+            pointer-events:none;
+            padding: 2px 8px;
+            border: 1px solid #b3c9ce;
+            border-radius: 4px;
+            text-align: center;
+            font: italic 14px/1.3 sans-serif;
+            color: #333;
+            background: #fff;
+            z-index: 100000;
+            box-shadow: 3px 3px 3px rgba(0, 0, 0, .3);
+          }
         `
 
         canvasCtn.classList.add('minimap-holder')
@@ -194,51 +209,28 @@
         document.head.appendChild(canvasStyle)
         canvasCtn.appendChild(canvas)
         document.body.appendChild(canvasCtn)
+        document.body.appendChild(tooltip)
 
         canvas.destroyElement = () => {
             canvasStyle.remove()
             canvas.remove()
             canvasCtn.remove()
+            tooltip.remove()
         }
 
         /* ------------------------- minimap dragging setup ------------------------- */
-        canvasCtn.addEventListener('mousedown', (evt) => {
-            evt.preventDefault()
+        canvasCtn.addEventListener('mousedown', (evt) =>
+            dragMinimap(evt, canvasCtn)
+        )
+        /* ------------------------- teleport on double click setup ------------------------ */
+        canvas.addEventListener('click', teleportOnClick)
 
-            document.body.style.overflow = 'hidden'
-
-            let startX = 0
-            let startY = 0
-            let newX = 0
-            let newY = 0
-
-            // get the starting position of the cursor
-            startX = evt.clientX
-            startY = evt.clientY
-
-            const mouseEvent = (e) => {
-                // calculate the new position
-                newX = startX - e.clientX
-                newY = startY - e.clientY
-
-                // with each move we also want to update the start X and Y
-                startX = e.clientX
-                startY = e.clientY
-
-                // set the element's new position:
-                canvasCtn.style.left = canvasCtn.offsetLeft - newX + 'px'
-                canvasCtn.style.top = canvasCtn.offsetTop - newY + 'px'
-            }
-
-            document.addEventListener('mousemove', mouseEvent)
-
-            const mouseUpHandler = () => {
-                document.body.style.overflow = ''
-                document.removeEventListener('mousemove', mouseEvent)
-                document.removeEventListener('mouseup', mouseUpHandler)
-            }
-
-            document.addEventListener('mouseup', mouseUpHandler)
+        /* ------------------------- show player names setup ------------------------ */
+        canvas.addEventListener('mousemove', (evt) =>
+            getPlayerNameOnHover(evt, tooltip)
+        )
+        canvas.addEventListener('mouseleave', () => {
+            tooltip.style = ''
         })
 
         return canvas
@@ -459,9 +451,11 @@
         )
 
         if (minimapState.debug) {
-            collisions.forEach((line, y) => {
-                line.forEach((col, x) => drawCoords(ctx, { x, y }, ratio))
-            })
+            for (let line = 0; line <= y; line++) {
+                for (let col = 0; col <= x; col++) {
+                    drawCoords(ctx, { x: col, y: line }, ratio)
+                }
+            }
         }
     }
 
@@ -497,6 +491,96 @@
             position.x * ratio + ratio / 2,
             position.y * ratio + ratio * 0.9
         )
+    }
+
+    function getPlayerNameOnHover(evt, tooltip) {
+        const x = Math.floor(evt.offsetX / minimapState.MAP_SCALE)
+        const y = Math.floor(evt.offsetY / minimapState.MAP_SCALE)
+
+        const playersInMap = Object.values(
+            game.getPlayersInMap(gameSpace.mapId)
+        )
+        const playerInCoordinate = (playerCoor, cursorCoor) => {
+            return (
+                Math.abs((playerCoor - cursorCoor) * minimapState.MAP_SCALE) <=
+                minimapState.MAP_SCALE
+            )
+        }
+
+        const hoveredPlayer = playersInMap.find(
+            (player) =>
+                playerInCoordinate(player.x, x) &&
+                playerInCoordinate(player.y, y)
+        )
+
+        if (hoveredPlayer) {
+            tooltip.innerHTML = hoveredPlayer.name
+            evt.target.style.cursor = 'pointer'
+            tooltip.style.display = 'block'
+            tooltip.style.top = evt.clientY + 10 + 'px'
+            tooltip.style.left = evt.clientX + 'px'
+            return
+        }
+        evt.target.style.cursor = 'unset'
+        tooltip.style = ''
+    }
+
+    function dragMinimap(evt, canvasCtn) {
+        evt.preventDefault()
+        evt.stopPropagation()
+        document.body.style.overflow = 'hidden'
+
+        let startX = 0
+        let startY = 0
+        let newX = 0
+        let newY = 0
+
+        // get the starting position of the cursor
+        startX = evt.clientX
+        startY = evt.clientY
+
+        const mouseEvent = (e) => {
+            // calculate the new position
+            newX = startX - e.clientX
+            newY = startY - e.clientY
+
+            // with each move we also want to update the start X and Y
+            startX = e.clientX
+            startY = e.clientY
+
+            // set the element's new position:
+            canvasCtn.style.left = canvasCtn.offsetLeft - newX + 'px'
+            canvasCtn.style.top = canvasCtn.offsetTop - newY + 'px'
+        }
+
+        document.addEventListener('mousemove', mouseEvent)
+
+        const mouseUpHandler = () => {
+            document.body.style.overflow = ''
+            document.removeEventListener('mousemove', mouseEvent)
+            document.removeEventListener('mouseup', mouseUpHandler)
+        }
+
+        document.addEventListener('mouseup', mouseUpHandler)
+    }
+
+    function teleportOnClick(evt) {
+        const canvas = evt.target
+
+        const teleport = ({ offsetX, offsetY }) => {
+            const x = Math.floor(offsetX / minimapState.MAP_SCALE)
+            const y = Math.floor(offsetY / minimapState.MAP_SCALE)
+
+            game.teleport(gameSpace.mapId, x, y)
+            canvas.removeEventListener('click', teleport)
+        }
+        /* -------------------------------------------------------------------------- */
+        /*                      add eventListener for DoubleClick                     */
+        /* -------------------------------------------------------------------------- */
+        canvas.addEventListener('click', teleport)
+        setTimeout(() => {
+            canvas.removeEventListener('click', teleport)
+        }, 300)
     }
 
     //todo consider adding this to a web worker (can it be on the same file / code?)
