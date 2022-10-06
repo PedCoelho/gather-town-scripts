@@ -2,9 +2,12 @@
 
 Experimenting with a **gather.town** frontend client scripting to implement things like:
 
-1. An interactive minimap (WIP)
-2. A script that moves the player automatically in a set pattern of directions (or a random pattern)
-3. A script that logs data about player interactions with objects in a given space
+1. `drawMapAllPlayers.js`: An interactive minimap
+2. `autoMove.js`: A script that moves the player automatically in a set pattern of directions (or a random pattern)
+3. `playerInteracts.ts`: A script that logs data about player interactions with objects in a given space
+4. `goKartStation.js`: A script that manages a custom goKart Station object
+5. `coordinatesLogger.js`: A script that enables logging and monitoring map coordinates interactively
+6. `becomeGoKart.js`: A script that removes and restores the players outfit when he gets on a vehicle
 
 <br>
 
