@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      1.03
+// @version      1.04
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
 // @match        https://*.gather.town/app*
@@ -89,7 +89,7 @@
         }
 
         this.changeScale = (value) => {
-            if (this.MAP_SCALE + value < 1 || this.MAP_SCALE + value >= 8)
+            if (this.MAP_SCALE + value <= 2 || this.MAP_SCALE + value >= 8)
                 return
             this.MAP_SCALE += value
             this.update()
@@ -514,7 +514,11 @@
         )
 
         if (hoveredPlayer) {
-            tooltip.innerHTML = hoveredPlayer.name
+            const playerId = Object.entries(game.players).find(
+                ([id, val]) => hoveredPlayer == val
+            )[0]
+            tooltip.innerHTML =
+                hoveredPlayer.name.trim() || `Anonymous (${playerId})`
             evt.target.style.cursor = 'pointer'
             tooltip.style.display = 'block'
             tooltip.style.top = evt.clientY + 10 + 'px'
