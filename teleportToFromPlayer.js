@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gather Teleport
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      1.0
 // @description  try to take over the world!
 // @author       You
 // @match        https://app.gather.town/app/*
@@ -40,7 +40,13 @@
     }
 
     const addButton = (parentEl, icon, text = 'new button', callbackFn) => {
-        const buttonRef = [...parentEl.querySelectorAll('span')].find((span) => span.innerText === 'Follow')?.parentElement
+        const getTextSpan = (el) =>
+            [...el.querySelectorAll('span')].find(
+                (span) => span.innerText === 'Follow'
+            )
+        const buttonRef = getTextSpan(parentEl)?.closest(
+            '[style*="width: 100%"]'
+        )
         if (!buttonRef) return
 
         const selectedPlayerId = findSelectedPlayer()
@@ -48,13 +54,13 @@
 
         const newElement = buttonRef.cloneNode(true)
 
-        newElement.querySelector('div').innerHTML = icon
-        newElement.querySelector('span').innerHTML = text
+        newElement.querySelector('svg').parentElement.innerHTML = icon
+        getTextSpan(newElement).innerHTML = text
         newElement.onclick = (e) => {
             e.preventDefault()
             callbackFn(selectedPlayerId)
         }
-        parentEl.appendChild(newElement)
+        buttonRef.closest('[style*="column"]').appendChild(newElement)
         console.log(`✨${text} button initialized`)
     }
 
