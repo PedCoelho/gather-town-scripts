@@ -9,6 +9,7 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 5. `coordinatesLogger.js`: A script that enables logging and monitoring map coordinates interactively
 6. `becomeGoKart.js`: A script that removes and restores the players outfit when he gets on a vehicle
 7. `teleportAllPlayers.js`: A script that will prompt the user for a map number to then teleport all players in a gather.town space into.
+8. `measureSpeakingTimes.js`: A script that measures speaking times for all players based on the playerActivelySpeaks events firing in a space.
 
 <br>
 
