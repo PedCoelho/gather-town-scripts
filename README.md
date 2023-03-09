@@ -10,6 +10,8 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 6. `becomeGoKart.js`: A script that removes and restores the players outfit when he gets on a vehicle
 7. `teleportAllPlayers.js`: A script that will prompt the user for a map number to then teleport all players in a gather.town space into.
 8. `measureSpeakingTimes.js`: A script that measures speaking times for all players based on the playerActivelySpeaks events firing in a space.
+9. `confettiHitDetection.js`: A script that checks for players in the range of the confetti effect and subscribes to the playerShootsConfetti event, triggering a notification.
+10. `mapCollisionsToString.js`: A script that converts from map collision data to base64 string data expected by some Gather.Town API methods.
 
 <br>
 
