@@ -12,6 +12,8 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 8. `measureSpeakingTimes.js`: A script that measures speaking times for all players based on the playerActivelySpeaks events firing in a space.
 9. `confettiHitDetection.js`: A script that checks for players in the range of the confetti effect and subscribes to the playerShootsConfetti event, triggering a notification.
 10. `mapCollisionsToString.js`: A script that converts from map collision data to base64 string data expected by some Gather.Town API methods.
+11. `getAvatarImage.js`: A script that takes the player's outfitString, converts it into an ordered list of outfitLayers and requests an avatar's spritesheet image from gather.town's dynamic-assets endpoint.
+12. `isMovingNearObjects.js`: A script that demonstrates a playerMoves subscription that logs objects within two squares from the player who moved. This also demonstrates how subscriptions can be cancelled and how events can be filtered from within the game.subscribeToEvent call itself.
 
 <br>
 
@@ -22,7 +24,7 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 -   Possibly have a mode that renders all maps in a given space simultaneously
     -   Or allows you to select a given map or a list of maps to render
 -   Maybe consider highlighting certain important types / kinds of objects (ex: portals, interactive objects)
-    -   could be a toggle that triggers a boolean that gets checked on render function, or wrapper
+    -   could be a toggle that triggers a `boolean` that gets checked on render function, or wrapper
     -   render function could be broken into steps, for better legibility, and wrapped by a wrapper (render players, render map, render objects, etc)
 
 ### ⏳ UNDER DEVELOPMENT
