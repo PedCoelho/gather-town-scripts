@@ -14,6 +14,7 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 10. `mapCollisionsToString.js`: A script that converts from map collision data to base64 string data expected by some Gather.Town API methods.
 11. `getAvatarImage.js`: A script that takes the player's outfitString, converts it into an ordered list of outfitLayers and requests an avatar's spritesheet image from gather.town's dynamic-assets endpoint.
 12. `isMovingNearObjects.js`: A script that demonstrates a playerMoves subscription that logs objects within two squares from the player who moved. This also demonstrates how subscriptions can be cancelled and how events can be filtered from within the game.subscribeToEvent call itself.
+13. `findMatchingObjects.js`: A script that finds all objects in the space with any property value including a given string (quickly searches through all property values for every object in a space)
 
 <br>
 
