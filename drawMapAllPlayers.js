@@ -133,10 +133,10 @@
                 if (!minimapState.initialized) return
 
                 //update map when any player moves in the current map
-                const currentMap = gameSpace.mapId
-                if (map === currentMap) {
-                    minimapState.update()
-                }
+                //const currentMap = gameSpace.mapId
+                //if (map === currentMap) {
+                minimapState.update()
+                //}
             })
 
         const monitorPlayersExiting = () =>
@@ -149,6 +149,8 @@
                     minimapState.update()
                 }
             })
+
+        //todo add a way to monitor when a player leaves a map by walking into a portal or teleporting, maybe
     }
 
     function setupCanvas() {
@@ -406,6 +408,9 @@
         const collisions = currentMap.collisions
         const dimensions = currentMap.dimensions
 
+        const objects = Object.values(currentMap.objects || {})
+        const portals = currentMap.portals || []
+
         const player = gameSpace.getPlayerGameState()
         const playersInMap = Object.values(
             game.getPlayersInMap(gameSpace.mapId)
@@ -429,6 +434,9 @@
                 ctx.fillRect(col * ratio, line * ratio, ratio, ratio)
             }
         }
+
+        drawObjects(objects, ctx, ratio)
+        drawPortals(portals, ctx, ratio)
 
         /* ---------------------------- draw ALL players ---------------------------- */
         playersInMap.forEach(({ x, y }) => {
@@ -457,6 +465,32 @@
                 }
             }
         }
+    }
+
+    function drawObjects(objects, context, ratio) {
+        const mapUnitSize = 32
+
+        objects.forEach(({ x, y, offsetX, offsetY, width, height }) => {
+            //review this positioning logic would need to be enforced when checking for mouse-over, unfortunately
+            const calculatedOffsetX = Math.floor(offsetX / mapUnitSize) || 0
+            const calculatedOffsetY = Math.floor(offsetY / mapUnitSize) || 0
+            x = width > 1 ? x + Math.floor(width / 2) : x
+            y = height > 1 ? y + Math.floor(height / 2) : y
+            context.fillStyle = 'lightgreen'
+            context.fillRect(
+                (x + calculatedOffsetX) * ratio,
+                (y + calculatedOffsetY) * ratio,
+                ratio,
+                ratio
+            )
+        })
+    }
+
+    function drawPortals(portals, context, ratio) {
+        portals.forEach(({ x, y }) => {
+            context.fillStyle = 'red'
+            context.fillRect(x * ratio, y * ratio, ratio, ratio)
+        })
     }
 
     function drawPlayer(
@@ -494,6 +528,8 @@
     }
 
     function getPlayerNameOnHover(evt, tooltip) {
+        //todo make this a generic handler which handles whether the cursor is on an object, player, etc
+        //todo if object viewing is disabled, don't handle this scenario (ENABLE AND DISABLE OBJECT VIEWING WITH A FLAG IN THE STATE)
         const x = Math.floor(evt.offsetX / minimapState.MAP_SCALE)
         const y = Math.floor(evt.offsetY / minimapState.MAP_SCALE)
 
