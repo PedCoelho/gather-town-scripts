@@ -24,9 +24,7 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 -   Possibly have a mode that renders all maps in a given space simultaneously
     -   Or allows you to select a given map or a list of maps to render
--   Maybe consider highlighting certain important types / kinds of objects (ex: portals, interactive objects)
-    -   could be a toggle that triggers a `boolean` that gets checked on render function, or wrapper
-    -   render function could be broken into steps, for better legibility, and wrapped by a wrapper (render players, render map, render objects, etc)
+-   Have a toggle that triggers objects / portals / etc rendering
 
 ### ⏳ UNDER DEVELOPMENT
 
@@ -52,6 +50,8 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 -   Add debug function
 -   Teleport directly to the coordinate clicked
 -   View players names on mouseover
+-   Highlight certain important types / kinds of objects (ex: portals, interactive objects)
+    -   render function could be broken into steps, for better legibility, and wrapped by a wrapper (render players, render map, render objects, etc)
 
 ### ⏳ KNOWN BUGS
 
