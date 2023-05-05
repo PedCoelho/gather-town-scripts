@@ -1,4 +1,8 @@
-const generateAvatarImage = (outfitString) => {
+//to be used in "https://dynamic-assets.gather.town/v2/sprite/avatar-{{data}}.png?d=."
+//OR "https://dynamic-assets.gather.town/v2/sprite-profile/avatar-{{data}}.png?d=."
+//IF querying profile image
+
+const generateAvatarImage = (outfitString, isProfile = false) => {
     const WearableLayerOrderMap = {
         'mobility back': 0,
         'other back': 1,
@@ -20,7 +24,7 @@ const generateAvatarImage = (outfitString) => {
         'costume front': 17,
     }
     const outfit = Object.values(JSON.parse(outfitString))
-    const parts = outfit
+    const spriteSheetParts = outfit
         .map((outfitLayer) =>
             outfitLayer?.parts.map((part) => ({
                 spritesheetId: part?.spritesheetId,
@@ -28,7 +32,6 @@ const generateAvatarImage = (outfitString) => {
             }))
         )
         .filter((x) => x)
-    return parts
         .flat()
         .sort((a, b) =>
             WearableLayerOrderMap[a.layerId] < WearableLayerOrderMap[b.layerId]
@@ -36,5 +39,10 @@ const generateAvatarImage = (outfitString) => {
                 : 0
         )
         .map((x) => x.spritesheetId)
-        .join('.')
+
+    const profileImageParts = outfit
+        .map((outfitLayer) => outfitLayer?.id)
+        .filter((x) => x)
+
+    return isProfile ? profileImageParts.join('.') : spriteSheetParts.join('.')
 }
