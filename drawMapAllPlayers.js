@@ -137,7 +137,7 @@
         }, 100)
 
         const monitorPlayerMovement = () =>
-            game.subscribeToEvent('playerMoves', (evt, { player: { map } }) => {
+            game.subscribeToEvent('playerMoves', (data, context) => {
                 if (!minimapState.initialized) return
 
                 updateHeatmaps(data, context)
