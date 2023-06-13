@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      2.0
+// @version      2.1
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
 // @match        https://*.gather.town/app*
@@ -590,6 +590,8 @@
     }
 
     function drawHeatmap(ratio, { holder, heatmap }) {
+        if (!h337) return // if no heatmapjs singleton is present, don't attempt to draw or initialize heatmap yet
+
         if (minimapState.debug) ratio = 25
 
         const currentMap = gameSpace.mapState[gameSpace.mapId]
@@ -601,7 +603,6 @@
 
         holder.style.height = revisedWidth + 'px'
         holder.style.width = revisedHeight + 'px'
-
         if (!heatmap) {
             minimapState.heatmap.heatmap = h337.create({
                 container: holder,
