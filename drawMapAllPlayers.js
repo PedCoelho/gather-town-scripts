@@ -590,7 +590,7 @@
     }
 
     function drawHeatmap(ratio, { holder, heatmap }) {
-        if (!h337) return // if no heatmapjs singleton is present, don't attempt to draw or initialize heatmap yet
+        if (!window?.h337) return // if no heatmapjs singleton is present, don't attempt to draw or initialize heatmap yet
 
         if (minimapState.debug) ratio = 25
 
@@ -614,9 +614,13 @@
 
             minimapState.heatmap.holder = document.querySelector('.heatmap') //todo see if this is necessary or completely irrelevant
             //   startHeatmapTimer() //todo maybe assign this to a specific button / function as it changes the whole dynamic
+            return
         }
 
         setTimeout(() => {
+            const data = heatmaps?.[currentMap.id]
+            if (!data) return
+
             /* -------------------------- actual heatmap update ------------------------- */
             const { canvas, shadowCanvas } = heatmap._renderer
             canvas.height = revisedHeight
@@ -625,8 +629,6 @@
             shadowCanvas.width = revisedWidth
             heatmap._renderer._height = revisedHeight
             heatmap._renderer._width = revisedWidth
-            const data = heatmaps?.[currentMap.id]
-            if (!data) return
 
             const maxValue = Math.max(...data.flat())
             const MAX_HEATMAP_VALUE = 25
