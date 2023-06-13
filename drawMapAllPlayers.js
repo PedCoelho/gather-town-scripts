@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      1.04
+// @version      2.0
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
 // @match        https://*.gather.town/app*
 // @icon         https://www.google.com/s2/favicons?domain=gather.town
 // @grant        none
+// @updateURL    https://raw.githubusercontent.com/PedCoelho/gather-town-scripts/dev/drawMapAllPlayers.js?token=GHSAT0AAAAAABUX7D6QOUI5IRX5VUALUCSMY3TU7AA
+// @downloadURL  https://raw.githubusercontent.com/PedCoelho/gather-town-scripts/dev/drawMapAllPlayers.js?token=GHSAT0AAAAAABUX7D6QOUI5IRX5VUALUCSMY3TU7AA
 // ==/UserScript==
 
 ;(function () {
@@ -17,7 +19,10 @@
     /* -------------------------------------------------------------------------- */
 
     const minimapState = new MinimapState()
+    const heatmaps = {}
+
     window.minimapState = minimapState
+    window.heatmaps = heatmaps
 
     function MinimapState(initialScale = 4) {
         this.MAP_COLLISION_COLOR = 'rgb(32, 37, 64)'
@@ -32,6 +37,7 @@
         this.debug = false
 
         this.canvas = undefined
+        this.heatmap = undefined
         this.toggleButton = undefined
 
         this.init = () => {
@@ -39,6 +45,7 @@
                 if (!this.initialized) {
                     setupGlobalEvents()
                     this.canvas = setupCanvas()
+                    this.heatmap = setupHeatmap()
                     this.toggleButton = setupMinimapButton(this.canvas)
                     setupMapControls(this.canvas)
                     this.initialized = true
@@ -82,6 +89,7 @@
                     this.init()
                 } else {
                     drawMap(this.MAP_SCALE, this.canvas)
+                    drawHeatmap(this.MAP_SCALE, this.heatmap)
                 }
             } catch (e) {
                 console.error(e)
@@ -132,11 +140,8 @@
             game.subscribeToEvent('playerMoves', (evt, { player: { map } }) => {
                 if (!minimapState.initialized) return
 
-                //update map when any player moves in the current map
-                //const currentMap = gameSpace.mapId
-                //if (map === currentMap) {
+                updateHeatmaps(data, context)
                 minimapState.update()
-                //}
             })
 
         const monitorPlayersExiting = () =>
@@ -149,8 +154,43 @@
                     minimapState.update()
                 }
             })
+    }
 
-        //todo add a way to monitor when a player leaves a map by walking into a portal or teleporting, maybe
+    function setupHeatmap() {
+        /* ------------------------------ setup canvas ------------------------------ */
+        const minimapCtn = document.querySelector('.minimap-holder')
+        const heatmapHolder = document.createElement('div')
+        const heatmapStyle = document.createElement('style')
+
+        const heatmapCss = `
+            .heatmap{
+              position:absolute !important;
+              border-radius: 6px;
+              margin-top: auto;
+              margin-bottom: auto;
+              pointer-events:none;
+            }
+            `
+        heatmapHolder.classList.add('heatmap')
+        heatmapStyle.appendChild(document.createTextNode(heatmapCss))
+
+        document.head.appendChild(heatmapStyle)
+        minimapCtn.appendChild(heatmapHolder)
+
+        heatmapHolder.destroyElement = () => {
+            heatmapStyle.remove()
+            script.remove()
+        }
+
+        /* ----------------------------- setup heatmapJS ---------------------------- */
+        const heatmapJS =
+            'https://cdnjs.cloudflare.com/ajax/libs/heatmap.js/2.0.0/heatmap.min.js'
+        const script = document.createElement('script')
+        document.body.appendChild(script)
+        script.src = heatmapJS
+        const heatmap = null
+
+        return { holder: heatmapHolder, heatmap }
     }
 
     function setupCanvas() {
@@ -527,6 +567,89 @@
         )
     }
 
+    function startHeatmapTimer() {
+        //FOR TRACKING STATIC PLAYER POSITIONS
+        if (minimapState.heatmapInterval) {
+            console.error(
+                'Cannot start heatmap timer as it is already started.'
+            )
+            return
+        }
+        minimapState.heatmapInterval = setInterval(() => {
+            Object.values(game.players).forEach((player) => {
+                if (heatmaps[player.map]) {
+                    heatmaps[player.map][player.y][player.x]++
+                }
+            })
+            minimapState.update()
+        }, 5000)
+    }
+
+    function stopHeatmapTimer() {
+        clearInterval(minimapState.heatmapInterval)
+    }
+
+    function drawHeatmap(ratio, { holder, heatmap }) {
+        if (minimapState.debug) ratio = 25
+
+        const currentMap = gameSpace.mapState[gameSpace.mapId]
+        const dimensions = currentMap.dimensions
+        const [x, y] = dimensions
+
+        const revisedWidth = x * ratio
+        const revisedHeight = y * ratio
+
+        holder.style.height = revisedWidth + 'px'
+        holder.style.width = revisedHeight + 'px'
+
+        if (!heatmap) {
+            minimapState.heatmap.heatmap = h337.create({
+                container: holder,
+                radius: 4 * ratio,
+                maxOpacity: 0.4,
+                minOpacity: 0,
+                blur: 0.75,
+            })
+
+            minimapState.heatmap.holder = document.querySelector('.heatmap') //todo see if this is necessary or completely irrelevant
+            //   startHeatmapTimer() //todo maybe assign this to a specific button / function as it changes the whole dynamic
+        }
+
+        setTimeout(() => {
+            /* -------------------------- actual heatmap update ------------------------- */
+            const { canvas, shadowCanvas } = heatmap._renderer
+            canvas.height = revisedHeight
+            canvas.width = revisedWidth
+            shadowCanvas.height = revisedHeight
+            shadowCanvas.width = revisedWidth
+            heatmap._renderer._height = revisedHeight
+            heatmap._renderer._width = revisedWidth
+            const data = heatmaps?.[currentMap.id]
+            if (!data) return
+
+            const maxValue = Math.max(...data.flat())
+            const MAX_HEATMAP_VALUE = 25
+
+            const mappedData = data
+                .reduce((acc, curr, yIndex) => {
+                    const data = curr.map((x, xIndex) => ({
+                        x: xIndex * ratio + Math.round(ratio / 2),
+                        y: yIndex * ratio + Math.round(ratio / 2),
+                        value: x,
+                    }))
+                    return [...acc, ...data]
+                }, [])
+                .filter((x) => x.value > 0)
+
+            heatmap.setData({
+                min: 0,
+                max:
+                    maxValue > MAX_HEATMAP_VALUE ? maxValue : MAX_HEATMAP_VALUE,
+                data: mappedData,
+            })
+        })
+    }
+
     function getPlayerNameOnHover(evt, tooltip) {
         //todo make this a generic handler which handles whether the cursor is on an object, player, etc
         //todo if object viewing is disabled, don't handle this scenario (ENABLE AND DISABLE OBJECT VIEWING WITH A FLAG IN THE STATE)
@@ -563,6 +686,27 @@
         }
         evt.target.style.cursor = 'unset'
         tooltip.style = ''
+    }
+
+    function updateHeatmaps(data, context) {
+        const initializeHeatmap = (map) => {
+            const dimensions = game.completeMaps[map].dimensions
+            heatmaps[map] = new Array(dimensions[1])
+                .fill(null)
+                .map(() => new Array(dimensions[0]).fill(0))
+        }
+
+        const mapName = context?.player.map
+
+        if (!heatmaps[mapName]) {
+            initializeHeatmap(mapName)
+        }
+
+        const { x, y } = data.playerMoves
+
+        if (x < heatmaps[mapName][0].length && y < heatmaps[mapName].length) {
+            heatmaps[mapName][y][x]++
+        }
     }
 
     function dragMinimap(evt, canvasCtn) {

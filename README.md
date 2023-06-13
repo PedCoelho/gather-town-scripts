@@ -2,7 +2,7 @@
 
 Experimenting with a **gather.town** frontend client scripting to implement things like:
 
-1. `drawMapAllPlayers.js`: An interactive minimap
+1. `drawMapAllPlayers.js`: An interactive minimap (with live heatmap of player positions)
 2. `autoMove.js`: A script that moves the player automatically in a set pattern of directions (or a random pattern)
 3. `playerInteracts.ts`: A script that logs data about player interactions with objects in a given space
 4. `goKartStation.js`: A script that manages a custom goKart Station object
@@ -25,6 +25,10 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 -   Possibly have a mode that renders all maps in a given space simultaneously
     -   Or allows you to select a given map or a list of maps to render
 -   Have a toggle that triggers objects / portals / etc rendering
+
+**v3 roadmap**
+
+-   Have a toggle that triggers heatmap layer rendering
 
 ### ⏳ UNDER DEVELOPMENT
 
@@ -52,7 +56,8 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 -   View players names on mouseover
 -   Highlight certain important types / kinds of objects (ex: portals, interactive objects)
     -   render function could be broken into steps, for better legibility, and wrapped by a wrapper (render players, render map, render objects, etc)
+-   Implement a heatmap view of player movement / player positions
 
 ### ⏳ KNOWN BUGS
 
--   At the moment, when a player enters a portal, map.update doesn`t get triggered. This probably has to do with the fact that we are only triggering map renders when somebody moves in the current map.
+    No known bugs to report at the moment
