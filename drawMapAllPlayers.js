@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      2.1
+// @version      2.2
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
 // @match        https://*.gather.town/app*
@@ -29,6 +29,7 @@
         this.MAP_WALKABLE_COLOR = 'rgb(84, 92, 143)'
         this.PLAYER_COLOR = 'white'
         this.PLAYER_SCALING_FACTOR = 1
+        this.SHOW_INTERACTIVE_OBJECTS = false
         this.INITIAL_SCALE = initialScale
         this.MAP_SCALE = initialScale
 
@@ -344,9 +345,18 @@
     <path fill="#ffffff" d="M421.596 294.643q0 1.395-.279 1.953-17.857 74.777-74.777 121.233t-133.371 46.457q-40.737 0-78.823-15.346t-67.941-43.806l-35.993 35.993q-5.301 5.301-12.556 5.301T5.3 441.127t-5.301-12.556v-125q0-7.254 5.301-12.556t12.556-5.301h125q7.254 0 12.556 5.301t5.301 12.556-5.301 12.556l-38.226 38.226q19.81 18.415 44.922 28.46t52.176 10.044q37.388 0 69.754-18.136t51.897-49.944q3.069-4.743 14.788-32.645 2.232-6.417 8.371-6.417h53.571q3.627 0 6.278 2.651t2.651 6.278zm6.975-223.214v125q0 7.254-5.301 12.556t-12.556 5.301h-125q-7.254 0-12.556-5.301t-5.301-12.556 5.301-12.556l38.504-38.504q-41.294-38.226-97.377-38.226-37.388 0-69.754 18.136t-51.897 49.944q-3.069 4.743-14.788 32.645-2.232 6.417-8.371 6.417H13.951q-3.627 0-6.278-2.651t-2.651-6.278v-1.953Q23.158 128.626 80.357 82.17t133.929-46.457q40.737 0 79.241 15.485t68.359 43.667l36.272-35.993q5.301-5.301 12.556-5.301t12.556 5.301 5.301 12.556z"/>
   </svg>`
 
+        const interactiveObjectsIcon = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 256 256" enable-background="new 0 0 256 256" xml:space="preserve">
+<g><g><path fill="#ffffff" d="M196.8,246c-25.4,0-96.3,0-115.1,0c-1.3,0-43.3-56.4-48.8-69.6c-3.9-9.3-1.5-19.6,4.3-27.5c6.5-8.9,19.6-16.4,31.3-11.3c11.4,5.1,27.6,17.6,27.6,17.6s0-51.9,0-59.3c0-6.7,3.8-21.7,28.6-21.7c21.9,0,28.5,15.2,28.5,22.2c0,5.8,0,35,0,35s66.4,11.3,71.6,37.2C226.9,178.8,209.3,246,196.8,246z M203.5,176.9c-3.3-23.5-64.4-27.5-64.4-27.5l-0.1-42c0,0-1.3-11.4-14.8-11.9c-12.4-0.4-13.9,12.3-13.9,12.3v66.3c0,0-15.7,2.2-20.9-3.2c-9-9.4-23.9-24.2-35-15.6c-5.3,4.1-3.8,13.4-0.6,20.2c4.3,9.2,35.7,48.8,35.7,48.8h99C188.4,224.5,205.6,192,203.5,176.9z M176.7,92.4c-6.2,0-11.2-5-11.2-11.2c0-2.3,0-5.6,0-7.5c0-22.8-18.3-41.2-40.9-41.2S83.8,50.9,83.8,73.7c0,1.9,0,5.2,0,7.5c0,6.2-5,11.2-11.1,11.2c-6.2,0-11.1-5-11.1-11.2c0-2,0-5.2,0-7.5c0-35.2,28.3-63.7,63.2-63.7c34.9,0,63.2,28.5,63.2,63.7c0,2.3,0,5.5,0,7.5C187.9,87.4,182.9,92.4,176.7,92.4z"/></g></g>
+</svg>`
+
         const controlsHTML = `
+        <div>
     <div id="resetControl">
       <button>${refreshIcon}</button>
+    </div>
+    <div id="toggleObjects">
+      <button>${interactiveObjectsIcon}</button>
+    </div>
     </div>
     <div id="scaleControls">
       <button>+</button>
@@ -429,6 +439,7 @@
         const scaleDownBtn =
             controlsCtn.querySelector('#scaleControls').lastElementChild
         const resetBtn = controlsCtn.querySelector('#resetControl')
+        const toggleObjsBtn = controlsCtn.querySelector('#toggleObjects')
 
         scaleUpBtn.addEventListener('click', () => minimapState.changeScale(1))
         scaleDownBtn.addEventListener('click', () =>
@@ -438,6 +449,11 @@
             minimapState.MAP_SCALE = minimapState.INITIAL_SCALE
             minimapState.canvas.parentElement.style.top = '2rem'
             minimapState.canvas.parentElement.style.left = '2rem'
+            minimapState.update()
+        })
+        toggleObjsBtn.addEventListener('click', () => {
+            minimapState.SHOW_INTERACTIVE_OBJECTS =
+                !minimapState.SHOW_INTERACTIVE_OBJECTS
             minimapState.update()
         })
     }
@@ -510,13 +526,17 @@
     function drawObjects(objects, context, ratio) {
         const mapUnitSize = 32
 
-        objects.forEach(({ x, y, offsetX, offsetY, width, height }) => {
+        objects.forEach(({ x, y, offsetX, offsetY, width, height, type }) => {
             //review this positioning logic would need to be enforced when checking for mouse-over, unfortunately
             const calculatedOffsetX = Math.floor(offsetX / mapUnitSize) || 0
             const calculatedOffsetY = Math.floor(offsetY / mapUnitSize) || 0
             x = width > 1 ? x + Math.floor(width / 2) : x
             y = height > 1 ? y + Math.floor(height / 2) : y
-            context.fillStyle = 'lightgreen'
+            context.fillStyle =
+                type !== 0 && minimapState.SHOW_INTERACTIVE_OBJECTS
+                    ? 'hotpink'
+                    : 'lightgreen'
+
             context.fillRect(
                 (x + calculatedOffsetX) * ratio,
                 (y + calculatedOffsetY) * ratio,
