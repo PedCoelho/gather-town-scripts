@@ -15,6 +15,7 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 11. `getAvatarImage.js`: A script that takes the player's outfitString, converts it into an ordered list of outfitLayers and requests an avatar's spritesheet or profile image from gather.town's dynamic-assets endpoint.
 12. `isMovingNearObjects.js`: A script that demonstrates a playerMoves subscription that logs objects within two squares from the player who moved. This also demonstrates how subscriptions can be cancelled and how events can be filtered from within the game.subscribeToEvent call itself.
 13. `findMatchingObjects.js`: A script that finds all objects in the space with any property value including a given string (quickly searches through all property values for every object in a space)
+14. `mapTileSelector.js`: A (client-side) script relying on the HTML Canvas to take a map's background image, break it into tiles associated with the gather.town coordinate system and then filter them based on a set of HEX color thresholds. Ex: filter all map tiles containing at least 60% of color f2f2f2 and 10% of color whatever.
 
 <br>
 
