@@ -38,8 +38,8 @@ const getColors = (pixels) => {
         g = data[i + 1]
         b = data[i + 2]
         a = data[i + 3] // alpha
-        // skip pixels >50% transparent
-        if (a < 255 / 2) continue
+        // skip transparent pixels
+        if (a < 255) continue
         col = rgbToHex(r, g, b)
         if (!colors[col]) colors[col] = 0
         colors[col]++
@@ -98,11 +98,12 @@ renderTiles(tiles)
 const filterTiles = (tiles, thresholds) =>
     tiles.filter((tile) =>
         Object.entries(thresholds).every(
-            ([color, threshold]) => tile.data[color] >= (1024 * threshold) / 100
+            ([color, threshold]) =>
+                tile.data[color.replace('#', '')] >= (1024 * threshold) / 100
         )
     )
 
-const filtered = filterTiles(tiles, { '639bff': 60 }) // map of hex colors and minimum percentage threshold for filtering tiles
+const filtered = filterTiles(tiles, { '#639bff': 60 }) // map of hex colors and minimum percentage threshold for filtering tiles
 
 console.log(`Filtered Tiles:`, filtered)
 
