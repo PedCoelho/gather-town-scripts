@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      2.2
+// @version      2.3
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
 // @match        https://*.gather.town/app*
@@ -32,6 +32,8 @@
         this.SHOW_INTERACTIVE_OBJECTS = false
         this.INITIAL_SCALE = initialScale
         this.MAP_SCALE = initialScale
+        this.hoveredX = undefined
+        this.hoveredY = undefined
 
         this.initialized = false
         this.eventSubscriptions = [] //to clean when destroying the canvas
@@ -199,6 +201,10 @@
         const canvas = document.createElement('canvas')
         const tooltip = document.createElement('div')
         tooltip.className = 'tooltip'
+
+        tooltip.show = showTooltip.bind(tooltip)
+        tooltip.hide = hideTooltip.bind(tooltip)
+
         const canvasStyle = document.createElement('style')
 
         const minimapCss = `
@@ -270,10 +276,11 @@
 
         /* ------------------------- show player names setup ------------------------ */
         canvas.addEventListener('mousemove', (evt) =>
-            getPlayerNameOnHover(evt, tooltip)
+            handleMouseHovering(evt, tooltip)
         )
         canvas.addEventListener('mouseleave', () => {
-            tooltip.style = ''
+            tooltip.hide()
+            setCoordinatesOnHover(undefined, undefined)
         })
 
         return canvas
@@ -673,12 +680,7 @@
         })
     }
 
-    function getPlayerNameOnHover(evt, tooltip) {
-        //todo make this a generic handler which handles whether the cursor is on an object, player, etc
-        //todo if object viewing is disabled, don't handle this scenario (ENABLE AND DISABLE OBJECT VIEWING WITH A FLAG IN THE STATE)
-        const x = Math.floor(evt.offsetX / minimapState.MAP_SCALE)
-        const y = Math.floor(evt.offsetY / minimapState.MAP_SCALE)
-
+    function getPlayerNameOnHover(x, y) {
         const playersInMap = Object.values(
             game.getPlayersInMap(gameSpace.mapId)
         )
@@ -689,26 +691,56 @@
             )
         }
 
-        const hoveredPlayer = playersInMap.find(
+        return playersInMap.find(
             (player) =>
                 playerInCoordinate(player.x, x) &&
                 playerInCoordinate(player.y, y)
         )
+    }
 
+    function showTooltip(text, evt, pointer = false) {
+        evt.target.style.cursor = pointer ? 'pointer' : 'unset'
+        this.innerHTML = text
+        this.style.display = 'block'
+        this.style.top = evt.clientY + 10 + 'px'
+        this.style.left = evt.clientX + 'px'
+    }
+
+    function hideTooltip(evt) {
+        this.style = ''
+        if (evt) evt.target.style.cursor = 'unset'
+    }
+
+    function updateCoordinatesDisplay() {}
+
+    function setCoordinatesOnHover(x, y) {
+        minimapState.hoveredX = x
+        minimapState.hoveredY = y
+        updateCoordinatesDisplay()
+    }
+
+    function handleMouseHovering(evt, tooltip) {
+        //todo make this a generic handler which handles whether the cursor is on an object, player, etc
+        //todo if object viewing is disabled, don't handle this scenario (ENABLE AND DISABLE OBJECT VIEWING WITH A FLAG IN THE STATE)
+        const x = Math.floor(evt.offsetX / minimapState.MAP_SCALE)
+        const y = Math.floor(evt.offsetY / minimapState.MAP_SCALE)
+
+        setCoordinatesOnHover(x, y)
+
+        const hoveredPlayer = getPlayerNameOnHover(x, y)
         if (hoveredPlayer) {
-            const playerId = Object.entries(game.players).find(
-                ([id, val]) => hoveredPlayer == val
-            )[0]
-            tooltip.innerHTML =
-                hoveredPlayer.name.trim() || `Anonymous (${playerId})`
-            evt.target.style.cursor = 'pointer'
-            tooltip.style.display = 'block'
-            tooltip.style.top = evt.clientY + 10 + 'px'
-            tooltip.style.left = evt.clientX + 'px'
-            return
+            return tooltip.show(
+                hoveredPlayer.name.trim() || `Anonymous (${hoveredPlayer.id})`,
+                evt,
+                true
+            )
         }
-        evt.target.style.cursor = 'unset'
-        tooltip.style = ''
+        //by default show current coordinates
+        tooltip.show(
+            `x:${minimapState.hoveredX},y:${minimapState.hoveredY}`,
+            evt
+        )
+        // tooltip.hide(evt)
     }
 
     function updateHeatmaps(data, context) {
