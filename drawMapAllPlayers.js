@@ -776,6 +776,7 @@
         evt.preventDefault()
         evt.stopPropagation()
         document.body.style.overflow = 'hidden'
+        document.body.style.cursor = 'move'
 
         let startX = 0
         let startY = 0
@@ -804,6 +805,7 @@
 
         const mouseUpHandler = () => {
             document.body.style.overflow = ''
+            document.body.style.cursor = 'unset'
             document.removeEventListener('mousemove', mouseEvent)
             document.removeEventListener('mouseup', mouseUpHandler)
         }
