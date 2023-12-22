@@ -496,6 +496,7 @@
         drawObjects(objects, ctx, ratio)
         drawPortals(portals, ctx, ratio)
         drawPlayers(ctx, ratio)
+        drawSelectedCoordinate(ctx, ratio)
 
         if (minimapState.debug) {
             for (let line = 0; line <= y; line++) {
@@ -506,7 +507,18 @@
         }
     }
 
-    function drawPlayers(ctx, ratio) {
+    function drawSelectedCoordinate(context, ratio) {
+        if (!(minimapState.hoveredX && minimapState.hoveredY)) return
+        context.strokeStyle = 'red'
+        context.strokeRect(
+            minimapState.hoveredX * ratio,
+            minimapState.hoveredY * ratio,
+            ratio,
+            ratio
+        )
+    }
+
+    function drawPlayers(context, ratio) {
         const player = gameSpace.getPlayerGameState()
         const playersInMap = Object.values(
             game.getPlayersInMap(gameSpace.mapId)
@@ -519,7 +531,7 @@
                 : 'yellow'
 
             drawPlayer(
-                ctx,
+                context,
                 { x, y },
                 ratio,
                 color,
@@ -709,12 +721,10 @@
         if (evt) evt.target.style.cursor = 'unset'
     }
 
-    function updateCoordinatesDisplay() {}
-
     function setCoordinatesOnHover(x, y) {
         minimapState.hoveredX = x
         minimapState.hoveredY = y
-        updateCoordinatesDisplay()
+        minimapState.update()
     }
 
     function handleMouseHovering(evt, tooltip) {
