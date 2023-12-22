@@ -27,7 +27,7 @@
     function MinimapState(initialScale = 4) {
         this.MAP_COLLISION_COLOR = 'rgb(32, 37, 64)'
         this.MAP_WALKABLE_COLOR = 'rgb(84, 92, 143)'
-        this.PLAYER_COLOR = 'white'
+        this.MAIN_PLAYER_COLOR = 'white'
         this.PLAYER_SCALING_FACTOR = 1
         this.SHOW_INTERACTIVE_OBJECTS = false
         this.INITIAL_SCALE = initialScale
@@ -474,11 +474,6 @@
         const objects = Object.values(currentMap.objects || {})
         const portals = currentMap.portals || []
 
-        const player = gameSpace.getPlayerGameState()
-        const playersInMap = Object.values(
-            game.getPlayersInMap(gameSpace.mapId)
-        ).map(({ x, y, name }) => ({ x, y, name }))
-
         const [x, y] = dimensions
 
         canvas.height = y * ratio
@@ -500,26 +495,7 @@
 
         drawObjects(objects, ctx, ratio)
         drawPortals(portals, ctx, ratio)
-
-        /* ---------------------------- draw ALL players ---------------------------- */
-        playersInMap.forEach(({ x, y }) => {
-            drawPlayer(
-                ctx,
-                { x, y },
-                ratio,
-                'yellow',
-                minimapState.PLAYER_SCALING_FACTOR
-            )
-        })
-
-        /* ---------------------------- draw MAIN player ---------------------------- */
-        drawPlayer(
-            ctx,
-            { x: player.x, y: player.y },
-            ratio,
-            minimapState.PLAYER_COLOR,
-            minimapState.PLAYER_SCALING_FACTOR
-        )
+        drawPlayers(ctx, ratio)
 
         if (minimapState.debug) {
             for (let line = 0; line <= y; line++) {
@@ -528,6 +504,28 @@
                 }
             }
         }
+    }
+
+    function drawPlayers(ctx, ratio) {
+        const player = gameSpace.getPlayerGameState()
+        const playersInMap = Object.values(
+            game.getPlayersInMap(gameSpace.mapId)
+        ).map(({ x, y, name }) => ({ x, y, name }))
+
+        playersInMap.forEach(({ x, y }) => {
+            const isMainPlayer = x === player.x && y === player.y
+            const color = isMainPlayer
+                ? minimapState.MAIN_PLAYER_COLOR
+                : 'yellow'
+
+            drawPlayer(
+                ctx,
+                { x, y },
+                ratio,
+                color,
+                minimapState.PLAYER_SCALING_FACTOR
+            )
+        })
     }
 
     function drawObjects(objects, context, ratio) {
