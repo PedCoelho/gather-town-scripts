@@ -708,9 +708,9 @@
         )
     }
 
-    function showTooltip(text, evt, pointer = false) {
+    function showTooltip(html, evt, pointer = false) {
         evt.target.style.cursor = pointer ? 'pointer' : 'unset'
-        this.innerHTML = text
+        this.innerHTML = html
         this.style.display = 'block'
         this.style.top = evt.clientY + 10 + 'px'
         this.style.left = evt.clientX + 'px'
