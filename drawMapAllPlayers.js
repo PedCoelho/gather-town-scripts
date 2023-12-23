@@ -690,7 +690,7 @@
         })
     }
 
-    function getPlayerNameOnHover(x, y) {
+    function getHoveredPlayer(x, y) {
         const playersInMap = Object.values(
             game.getPlayersInMap(gameSpace.mapId)
         )
@@ -705,6 +705,12 @@
             (player) =>
                 playerInCoordinate(player.x, x) &&
                 playerInCoordinate(player.y, y)
+        )
+    }
+
+    function getHoveredObjects(x, y) {
+        return Object.values(gameSpace.getMyPlayerMap().objects).filter(
+            (obj) => obj.x === x && obj.y === y
         )
     }
 
@@ -735,7 +741,16 @@
 
         setCoordinatesOnHover(x, y)
 
-        const hoveredPlayer = getPlayerNameOnHover(x, y)
+        const hoveredObjects = getHoveredObjects(x, y)
+        if (hoveredObjects.length) {
+            return tooltip.show(
+                JSON.stringify(hoveredObjects, null, 2),
+                evt,
+                true
+            )
+        }
+
+        const hoveredPlayer = getHoveredPlayer(x, y)
         if (hoveredPlayer) {
             return tooltip.show(
                 hoveredPlayer.name.trim() || `Anonymous (${hoveredPlayer.id})`,
@@ -743,6 +758,7 @@
                 true
             )
         }
+
         //by default show current coordinates
         tooltip.show(
             `x:${minimapState.hoveredX},y:${minimapState.hoveredY}`,
