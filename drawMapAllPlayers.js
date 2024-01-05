@@ -238,10 +238,10 @@
             position: absolute;
             display:none;
             pointer-events:none;
-            padding: 2px 8px;
+            padding: 4px 8px;
             border: 1px solid #b3c9ce;
             border-radius: 4px;
-            text-align: center;
+            text-align: left;
             font: italic 14px/1.3 sans-serif;
             color: #333;
             background: #fff;
@@ -690,7 +690,7 @@
         })
     }
 
-    function getHoveredPlayer(x, y) {
+    function getPlayerNameOnHover(x, y) {
         const playersInMap = Object.values(
             game.getPlayersInMap(gameSpace.mapId)
         )
@@ -708,22 +708,37 @@
         )
     }
 
-    function getHoveredObjects(x, y) {
-        return Object.values(gameSpace.getMyPlayerMap().objects).filter(
-            (obj) => obj.x === x && obj.y === y
+    function getObjectOnHover(x, y) {
+        const objects = Object.values(
+            game.completeMaps[gameSpace.mapId]?.objects
         )
+
+        const objectInCoordinate = (obj) => {
+            const objX =
+                obj.width > 1 ? obj.x + Math.floor(obj.width / 2) : obj.x
+            const objY =
+                obj.height > 1 ? obj.y + Math.floor(obj.height / 2) : obj.y
+            const calculatedOffsetX = Math.floor(obj.offsetX / 32) || 0
+            const calculatedOffsetY = Math.floor(obj.offsetY / 32) || 0
+            return (
+                objX + calculatedOffsetX === x && objY + calculatedOffsetY === y
+            )
+        }
+
+        return !objects ? null : objects.find(objectInCoordinate)
     }
 
-    function showTooltip(html, evt, pointer = false) {
+    function showTooltip(text, evt, pointer = false) {
+        if (this.innerHTML === text) return
         evt.target.style.cursor = pointer ? 'pointer' : 'unset'
-        this.innerHTML = html
+        this.innerHTML = text
         this.style.display = 'block'
         this.style.top = evt.clientY + 10 + 'px'
         this.style.left = evt.clientX + 'px'
     }
 
     function hideTooltip(evt) {
-        this.style = ''
+        this.style.display = 'none'
         if (evt) evt.target.style.cursor = 'unset'
     }
 
@@ -731,6 +746,67 @@
         minimapState.hoveredX = x
         minimapState.hoveredY = y
         minimapState.update()
+    }
+
+    function getPlayerAvatar(wearables) {
+        const profileImageParts = Object.values(wearables)
+            .filter((outfitLayer) => outfitLayer)
+            .join('.')
+
+        return `https://dynamic-assets.gather.town/v2/sprite-profile/avatar-${profileImageParts}.png?d=.`
+    }
+
+    function getImageHTML(src, avatar = false) {
+        const image = document.createElement('img')
+        image.style.imageRendering = 'pixelated'
+        image.style.objectFit = 'contain'
+        image.style.width = '32px'
+        image.style.height = '32px'
+        image.style.marginRight = '4px'
+
+        if (avatar) {
+            image.style.transform = 'scale(1.25)'
+            image.style.objectFit = 'cover'
+            image.style.objectPosition = '0 -20px'
+        }
+
+        image.src = src
+        return image.outerHTML
+    }
+
+    function getObjectTypeTagHTML(type) {
+        const element = document.createElement('span')
+        const typeColorMap = {
+            0: '#d9d9d9',
+            1: '#fccde5',
+            2: '#8dd3c7',
+            3: '#fb8072',
+            4: '#ffffb3',
+            5: '#bc80bd',
+            6: '#80b1d3',
+            7: '#fdb462',
+            8: '#bebada',
+            9: '#b3de69',
+        }
+
+        const typeLabelMap = {
+            0: 'none',
+            1: 'embedded_website',
+            2: 'poster',
+            3: 'video',
+            4: 'external_call',
+            5: 'extension',
+            6: 'note',
+            7: 'modal_extension',
+            8: 'component_modal',
+            9: 'side_panel_trigger',
+        }
+        element.style.borderRadius = '8px'
+        element.style.padding = '0 5px'
+        element.style.marginLeft = '4px'
+        element.style.backgroundColor = typeColorMap[type]
+        element.innerText = typeLabelMap[type]
+        return element.outerHTML
     }
 
     function handleMouseHovering(evt, tooltip) {
@@ -741,30 +817,47 @@
 
         setCoordinatesOnHover(x, y)
 
-        const hoveredObjects = getHoveredObjects(x, y)
-        if (hoveredObjects.length) {
-            return tooltip.show(
-                JSON.stringify(hoveredObjects, null, 2),
-                evt,
-                true
-            )
-        }
-
-        const hoveredPlayer = getHoveredPlayer(x, y)
+        const hoveredPlayer = getPlayerNameOnHover(x, y)
         if (hoveredPlayer) {
             return tooltip.show(
-                hoveredPlayer.name.trim() || `Anonymous (${hoveredPlayer.id})`,
+                `<div style="display:flex;align-items:center">${getImageHTML(
+                    getPlayerAvatar(
+                        hoveredPlayer.currentlyEquippedWearables ?? {}
+                    ),
+                    true
+                )}<div style="margin-left:4px"><p>${
+                    hoveredPlayer.name.trim() ||
+                    `Anonymous (${hoveredPlayer.id})`
+                }</p><p>x:${minimapState.hoveredX},y:${
+                    minimapState.hoveredY
+                }</p></div></div>`,
                 evt,
                 true
             )
         }
 
+        const hoveredObject = getObjectOnHover(x, y)
+        if (hoveredObject) {
+            return tooltip.show(
+                `<div style="display:flex;align-items:center">${getImageHTML(
+                    hoveredObject.normal
+                )}<div style="margin-left:4px"><p>${
+                    hoveredObject?._name?.trim() ?? 'Unnamed Object'
+                }</p><p>x:${minimapState.hoveredX},y:${
+                    minimapState.hoveredY
+                }</p></div></div>
+                 <div style="display:flex;align-items:center"><b>Type</b>:${getObjectTypeTagHTML(
+                     hoveredObject.type
+                 )}</div>`,
+                evt,
+                true
+            )
+        }
         //by default show current coordinates
         tooltip.show(
             `x:${minimapState.hoveredX},y:${minimapState.hoveredY}`,
             evt
         )
-        // tooltip.hide(evt)
     }
 
     function updateHeatmaps(data, context) {
@@ -822,6 +915,7 @@
         const mouseUpHandler = () => {
             document.body.style.overflow = ''
             document.body.style.cursor = 'unset'
+
             document.removeEventListener('mousemove', mouseEvent)
             document.removeEventListener('mouseup', mouseUpHandler)
         }
