@@ -708,6 +708,16 @@
         )
     }
 
+    function getPortalOnHover(x, y) {
+        const portals = Object.values(
+            game.completeMaps[gameSpace.mapId]?.portals
+        )
+
+        return !portals.length
+            ? null
+            : portals.find((portal) => portal.x === x && portal.y === y)
+    }
+
     function getObjectsOnHover(x, y) {
         const objects = Object.values(
             game.completeMaps[gameSpace.mapId]?.objects
@@ -831,6 +841,29 @@
                 }</p><p>x:${minimapState.hoveredX},y:${
                     minimapState.hoveredY
                 }</p></div></div>`,
+                evt,
+                true
+            )
+        }
+
+        const hoveredPortal = getPortalOnHover(x, y)
+        if (hoveredPortal) {
+            return tooltip.show(
+                `<div style="display:flex;flex-flow:column"><h3>Portal${
+                    hoveredPortal.targetUrl
+                        ? ' (External)'
+                        : ` (${hoveredPortal.targetMap})`
+                }</h3><p>x:${minimapState.hoveredX},y:${
+                    minimapState.hoveredY
+                }</p>${
+                    !hoveredPortal.targetUrl
+                        ? `<p><b>TargetX:</b> ${hoveredPortal.targetX}</p><p><b>TargetY:</b> ${hoveredPortal.targetY}</p>`
+                        : `<p><b>TargetURL:</b> ${decodeURIComponent(
+                              hoveredPortal.targetUrl
+                                  .split('/')[5]
+                                  .split('?')[0]
+                          ).toUpperCase()}</p>`
+                }</div>`,
                 evt,
                 true
             )
