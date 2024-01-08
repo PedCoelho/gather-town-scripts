@@ -708,7 +708,7 @@
         )
     }
 
-    function getObjectOnHover(x, y) {
+    function getObjectsOnHover(x, y) {
         const objects = Object.values(
             game.completeMaps[gameSpace.mapId]?.objects
         )
@@ -725,7 +725,7 @@
             )
         }
 
-        return !objects ? null : objects.find(objectInCoordinate)
+        return !objects ? null : objects.filter(objectInCoordinate)
     }
 
     function showTooltip(text, evt, pointer = false) {
@@ -836,22 +836,26 @@
             )
         }
 
-        const hoveredObject = getObjectOnHover(x, y)
-        if (hoveredObject) {
-            return tooltip.show(
-                `<div style="display:flex;align-items:center">${getImageHTML(
-                    hoveredObject.normal
-                )}<div style="margin-left:4px"><p>${
-                    hoveredObject?._name?.trim() ?? 'Unnamed Object'
-                }</p><p>x:${minimapState.hoveredX},y:${
-                    minimapState.hoveredY
-                }</p></div></div>
-                 <div style="display:flex;align-items:center"><b>Type</b>:${getObjectTypeTagHTML(
-                     hoveredObject.type
-                 )}</div>`,
-                evt,
-                true
-            )
+        const hoveredObjects = getObjectsOnHover(x, y)
+        if (hoveredObjects.length) {
+            const html = hoveredObjects
+                .map(
+                    (
+                        obj
+                    ) => `<div style="display:flex;align-items:center">${getImageHTML(
+                        obj.normal
+                    )}<div style="margin-left:4px"><p>${
+                        obj?._name?.trim() ?? 'Unnamed Object'
+                    }</p><p>x:${minimapState.hoveredX},y:${
+                        minimapState.hoveredY
+                    }</p></div></div>
+             <div style="display:flex;align-items:center"><b>Type</b>:${getObjectTypeTagHTML(
+                 obj.type
+             )}</div>`
+                )
+                .join('<hr>')
+
+            return tooltip.show(html, evt, true)
         }
         //by default show current coordinates
         tooltip.show(
