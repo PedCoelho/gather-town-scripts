@@ -43,21 +43,23 @@ Experimenting with a **gather.town** frontend client scripting to implement thin
 
 ### ✅ DONE
 
-**v1 roadmap**
+**v1**
 
 -   Include a button on the UI to hide / show the minimap
 -   Possibly include a zoom feature to allow for the minimap to be scaled up or down in real-time (could be achieved by buttons)
 -   Allow dragging the minimap to reposition it (and a button to reset the minimap's position and scale)
 
-**v2 roadmap**
+**v2**
 
--   Consider the impact and usability of displaying other players on the minimap
 -   Add debug function
--   Teleport directly to the coordinate clicked
+-   Teleport directly to the coordinate clicked (on double-click)
 -   View players names on mouseover
--   Highlight certain important types / kinds of objects (ex: portals, interactive objects)
-    -   render function could be broken into steps, for better legibility, and wrapped by a wrapper (render players, render map, render objects, etc)
--   Implement a heatmap view of player movement / player positions
+-   View map coordinates on mouseover
+-   Implement a **heatmap** view of player movement / player positions
+-   Highlight certain important types of objects (ex: portals, interactive objects)
+-   Add extra **information about objects, portals and players** on mouseover
+-   Add ability to click on a portal to teleport to it's destination
+-   Add ability to highlight players in the Gather.Town UI and see the corresponding player highlighted in the minimap
 
 ### ⏳ KNOWN BUGS
 

@@ -28,12 +28,14 @@
         this.MAP_COLLISION_COLOR = 'rgb(32, 37, 64)'
         this.MAP_WALKABLE_COLOR = 'rgb(84, 92, 143)'
         this.MAIN_PLAYER_COLOR = 'white'
+        this.SELECTED_PLAYER_COLOR = 'red'
         this.PLAYER_SCALING_FACTOR = 1
         this.SHOW_INTERACTIVE_OBJECTS = false
         this.INITIAL_SCALE = initialScale
         this.MAP_SCALE = initialScale
         this.hoveredX = undefined
         this.hoveredY = undefined
+        this.highlightedPlayer = undefined
 
         this.initialized = false
         this.eventSubscriptions = [] //to clean when destroying the canvas
@@ -522,11 +524,15 @@
         const player = gameSpace.getPlayerGameState()
         const playersInMap = Object.values(
             game.getPlayersInMap(gameSpace.mapId)
-        ).map(({ x, y, name }) => ({ x, y, name }))
+        )
 
-        playersInMap.forEach(({ x, y }) => {
+        playersInMap.forEach(({ x, y, id }) => {
             const isMainPlayer = x === player.x && y === player.y
-            const color = isMainPlayer
+            const isHighlightedPlayer = minimapState.highlightedPlayer === id
+
+            const color = isHighlightedPlayer
+                ? minimapState.SELECTED_PLAYER_COLOR
+                : isMainPlayer
                 ? minimapState.MAIN_PLAYER_COLOR
                 : 'yellow'
 
@@ -1009,6 +1015,32 @@
             link.remove()
         }
     }
+
+    document.body.addEventListener('mouseover', (evt) => {
+        /* -------------------------------------------------------------------------- */
+        /*                                EXPERIMENTAL                                */
+        /* -------------------------------------------------------------------------- */
+        /* ---- this adds the ability to mouse-over players in the gather.town UI --- */
+        /* ------------- and see them highlighted in red on the minimap ------------- */
+        const el = evt.target
+        if (el.className === 'css-71796n') {
+            const reactProp = Object.keys(el).find((key) =>
+                key.startsWith('__reactProps')
+            )
+            const highlightedPlayer =
+                el?.[reactProp]?.children?.[0]?.props?.children?.props?.playerId //gets playerId from connected players list
+            if (highlightedPlayer) {
+                minimapState.highlightedPlayer = highlightedPlayer
+                minimapState.update()
+                const onMouseLeave = () => {
+                    minimapState.highlightedPlayer = undefined
+                    minimapState.update()
+                    el.removeEventListener('mouseleave', onMouseLeave)
+                }
+                el.addEventListener('mouseleave', onMouseLeave)
+            }
+        }
+    })
 
     //todo consider adding this to a web worker (can it be on the same file / code?)
     setInterval(() => {
