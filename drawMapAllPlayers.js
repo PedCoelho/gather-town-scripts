@@ -271,7 +271,7 @@
         canvasCtn.addEventListener('mousedown', (evt) =>
             dragMinimap(evt, canvasCtn)
         )
-        /* ------------------------- teleport on double click setup ------------------------ */
+        /* ------------------------- teleport on click setup ------------------------ */
         canvas.addEventListener('click', teleportOnClick)
 
         /* ------------------------- show player names setup ------------------------ */
@@ -710,7 +710,7 @@
 
     function getPortalOnHover(x, y) {
         const portals = Object.values(
-            game.completeMaps[gameSpace.mapId]?.portals
+            game.completeMaps[gameSpace.mapId]?.portals ?? {}
         )
 
         return !portals.length
@@ -720,7 +720,7 @@
 
     function getObjectsOnHover(x, y) {
         const objects = Object.values(
-            game.completeMaps[gameSpace.mapId]?.objects
+            game.completeMaps[gameSpace.mapId]?.objects ?? {}
         )
 
         const objectInCoordinate = (obj) => {
@@ -961,6 +961,16 @@
     }
 
     function teleportOnClick(evt) {
+        const { offsetX, offsetY } = evt
+        const x = Math.floor(offsetX / minimapState.MAP_SCALE)
+        const y = Math.floor(offsetY / minimapState.MAP_SCALE)
+
+        /* ---------------------------- handle portal use --------------------------- */
+        const portal = getPortalOnHover(x, y)
+
+        if (portal) return usePortalOnClick(portal)
+
+        /* --------------------- handle teleport on double click -------------------- */
         const canvas = evt.target
 
         const teleport = ({ offsetX, offsetY }) => {
@@ -970,6 +980,7 @@
             game.teleport(gameSpace.mapId, x, y)
             canvas.removeEventListener('click', teleport)
         }
+
         /* -------------------------------------------------------------------------- */
         /*                      add eventListener for DoubleClick                     */
         /* -------------------------------------------------------------------------- */
@@ -977,6 +988,26 @@
         setTimeout(() => {
             canvas.removeEventListener('click', teleport)
         }, 300)
+    }
+
+    function usePortalOnClick(portal) {
+        if (!portal) return
+
+        if (portal.targetMap) {
+            return game.teleport(
+                portal.targetMap,
+                portal.targetX,
+                portal.targetY
+            )
+        }
+        if (portal.targetUrl) {
+            const link = document.createElement('a')
+            link.href = portal.targetUrl
+            link.target = '_blank'
+            document.body.append(link)
+            link.click()
+            link.remove()
+        }
     }
 
     //todo consider adding this to a web worker (can it be on the same file / code?)
