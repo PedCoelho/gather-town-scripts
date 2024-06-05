@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gather Teleport
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.2
 // @description  try to take over the world!
 // @author       You
 // @match        https://app.gather.town/app/*
@@ -32,10 +32,12 @@
         return searchIdRecursively(element[reactStateKey])
     }
 
-    const findSelectedPlayer = () => {
-        const playerUIButton = [
-            ...document.querySelectorAll('div[tabIndex="0"]'),
-        ].find((playerEl) => playerEl.selected)
+    const findSelectedPlayer = (searchEl) => {
+        const playerUIButton = searchEl
+            ? searchEl
+            : [...document.querySelectorAll('div[tabIndex="0"]')].find(
+                  (playerEl) => playerEl.selected
+              )
         return findPlayerId(playerUIButton)
     }
 
@@ -44,12 +46,14 @@
             [...el.querySelectorAll('span')].find(
                 (span) => span.innerText === 'Follow'
             )
-        const buttonRef = getTextSpan(parentEl)?.closest(
-            '[style*="width: 100%"]'
-        )
+
+        const buttonRef =
+            getTextSpan(parentEl)?.firstChild?.nodeName !== '#text'
+                ? getTextSpan(parentEl)?.firstChild
+                : getTextSpan(parentEl)?.closest('[style*="width: 100%"]')
         if (!buttonRef) return
 
-        const selectedPlayerId = findSelectedPlayer()
+        const selectedPlayerId = findSelectedPlayer(parentEl)
         if (!selectedPlayerId) return
 
         const newElement = buttonRef.cloneNode(true)
@@ -94,7 +98,7 @@
     const isUIOpen = () => {
         // check for UI presence without setInterval
         const observer = new MutationObserver((mutations) => {
-            const PLAYER_CARD_MODAL = lookForPlayerUI() //todo check if it makes sense to actually utilize mutations data
+            const PLAYER_CARD_MODAL = lookForPlayerUI()
             if (PLAYER_CARD_MODAL) {
                 observer.disconnect()
                 initializeButtons(PLAYER_CARD_MODAL.firstElementChild)
