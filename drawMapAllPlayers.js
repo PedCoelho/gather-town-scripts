@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Gather Minimap
 // @namespace    http://tampermonkey.net/
-// @version      2.6
+// @version      2.7
 // @description  try to take over the world!
 // @author       Pedro Coelho (https://github.com/pedcoelho)
 // @match        https://*.gather.town/app*
@@ -632,6 +632,7 @@
         clearInterval(minimapState.heatmapInterval)
     }
 
+    //todo drawing the heatmap is a very costly operation, it should be optimized
     function drawHeatmap(ratio, { holder, heatmap }) {
         if (!window?.h337) return // if no heatmapjs singleton is present, don't attempt to draw or initialize heatmap yet
 
@@ -659,41 +660,43 @@
             //   startHeatmapTimer() //todo maybe assign this to a specific button / function as it changes the whole dynamic
             return
         }
+        //review this used to be wrapped in a timeout, I'm not exactly sure why.
+        //review removing the timeout seems to improve performance significantly.
+        // setTimeout(() => {
+        const data = heatmaps?.[currentMap.id]
+        if (!data) return
 
-        setTimeout(() => {
-            const data = heatmaps?.[currentMap.id]
-            if (!data) return
+        /* -------------------------- actual heatmap update ------------------------- */
+        const { canvas, shadowCanvas } = heatmap._renderer
+        canvas.height = revisedHeight
+        canvas.width = revisedWidth
+        shadowCanvas.height = revisedHeight
+        shadowCanvas.width = revisedWidth
+        heatmap._renderer._height = revisedHeight
+        heatmap._renderer._width = revisedWidth
 
-            /* -------------------------- actual heatmap update ------------------------- */
-            const { canvas, shadowCanvas } = heatmap._renderer
-            canvas.height = revisedHeight
-            canvas.width = revisedWidth
-            shadowCanvas.height = revisedHeight
-            shadowCanvas.width = revisedWidth
-            heatmap._renderer._height = revisedHeight
-            heatmap._renderer._width = revisedWidth
+        const maxValue = Math.max(...data.flat())
+        const MAX_HEATMAP_VALUE = 25
 
-            const maxValue = Math.max(...data.flat())
-            const MAX_HEATMAP_VALUE = 25
+        //review this operation is computationally intensive, it shouldn't be done on every update
+        //review check when this is scheduled to happen and if it can be optimized
+        const mappedData = data
+            .reduce((acc, curr, yIndex) => {
+                const data = curr.map((x, xIndex) => ({
+                    x: xIndex * ratio + Math.round(ratio / 2),
+                    y: yIndex * ratio + Math.round(ratio / 2),
+                    value: x,
+                }))
+                return [...acc, ...data]
+            }, [])
+            .filter((x) => x.value > 0)
 
-            const mappedData = data
-                .reduce((acc, curr, yIndex) => {
-                    const data = curr.map((x, xIndex) => ({
-                        x: xIndex * ratio + Math.round(ratio / 2),
-                        y: yIndex * ratio + Math.round(ratio / 2),
-                        value: x,
-                    }))
-                    return [...acc, ...data]
-                }, [])
-                .filter((x) => x.value > 0)
-
-            heatmap.setData({
-                min: 0,
-                max:
-                    maxValue > MAX_HEATMAP_VALUE ? maxValue : MAX_HEATMAP_VALUE,
-                data: mappedData,
-            })
+        heatmap.setData({
+            min: 0,
+            max: maxValue > MAX_HEATMAP_VALUE ? maxValue : MAX_HEATMAP_VALUE,
+            data: mappedData,
         })
+        // })
     }
 
     function getPlayerNameOnHover(x, y) {
